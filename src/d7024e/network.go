@@ -13,7 +13,7 @@ func Listen(ip string, port int) {
 	laddr := net.UDPAddr{IP: byteIP, Port: port, Zone: ""}
 	conn, err := net.ListenUDP("udp", &laddr)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("error is", err)
 		return
 	}
 
