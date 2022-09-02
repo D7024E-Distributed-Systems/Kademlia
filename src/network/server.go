@@ -1,4 +1,4 @@
-package d7024e
+package network
 
 import (
 	"fmt"
@@ -6,14 +6,6 @@ import (
 	"net"
 	"strconv"
 )
-
-type Network struct {
-	currentNode *Contact
-}
-
-func NewNetwork(node *Contact) *Network {
-	return &Network{node}
-}
 
 func Listen(ip string, port int) {
 	addrStr := ip + ":" + strconv.Itoa(port)
@@ -60,41 +52,7 @@ func handleUDPConnection(conn *net.UDPConn) {
 	_, err = conn.WriteToUDP(message, addr)
 
 	if err != nil {
-		log.Println(err)
+		log.Fatal(err)
 	}
 
-}
-
-func (network *Network) SendPingMessage(contact *Contact) {
-	fmt.Println("SendPingMessage")
-	fmt.Println(contact.Address)
-
-	conn, err3 := net.Dial("udp4", contact.Address)
-	defer conn.Close()
-
-	if err3 != nil {
-		log.Println(err3)
-	}
-	message := []byte("Hello UDP server!")
-	conn.Write(message)
-	buffer := make([]byte, 1024)
-	n, err := conn.Read(buffer)
-	if err != nil {
-		log.Println(err)
-	}
-	fmt.Println(string(buffer[:n]))
-
-	// TODO
-}
-
-func (network *Network) SendFindContactMessage(contact *Contact) {
-	// TODO
-}
-
-func (network *Network) SendFindDataMessage(hash string) {
-	// TODO
-}
-
-func (network *Network) SendStoreMessage(data []byte) {
-	// TODO
 }
