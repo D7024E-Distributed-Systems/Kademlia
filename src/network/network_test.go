@@ -13,5 +13,5 @@ func TestNetworkStruct(t *testing.T) {
 
 	network := NewNetwork(&contact)
 
-	fmt.Println(network.currentNode.ID)
+	fmt.Println(network.CurrentNode.ID)
 }
