@@ -5,9 +5,10 @@ import (
 )
 
 type Network struct {
-	currentNode *Contact
+	CurrentNode  *Contact
+	RoutingTable *RoutingTable
 }
 
 func NewNetwork(node *Contact) *Network {
-	return &Network{node}
+	return &Network{node, NewRoutingTable(*node)}
 }
