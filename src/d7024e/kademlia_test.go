@@ -7,7 +7,7 @@ import (
 )
 
 func TestInsertData(t *testing.T) {
-	kd := newKademliaStruct()
+	kd := NewKademliaStruct()
 	if len(kd.m) != 0 {
 		fmt.Println(len(kd.m))
 		t.Fail()
@@ -22,7 +22,7 @@ func TestInsertData(t *testing.T) {
 }
 
 func TestLookupData(t *testing.T) {
-	kd := newKademliaStruct()
+	kd := NewKademliaStruct()
 	token := make([]byte, 255)
 	rand.Read(token)
 	fmt.Println(token)

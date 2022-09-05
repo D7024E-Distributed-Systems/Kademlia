@@ -14,7 +14,7 @@ type Value struct {
 	timeSinceRepublish int
 }
 
-func newKademliaStruct() *Kademlia {
+func NewKademliaStruct() *Kademlia {
 	kademlia := &Kademlia{}
 	kademlia.m = make(map[string]Value)
 	return kademlia
@@ -24,22 +24,23 @@ func (kademlia *Kademlia) LookupContact(target *Contact) {
 	// TODO
 }
 
+// Checks if data is stored in this node
 func (kademlia *Kademlia) LookupData(hash string) []byte {
 	value, exists := kademlia.m[hash]
 	if exists {
 		return value.data
 	}
 	return nil
-	// TODO
 }
 
+// Stores data in the node
 func (kademlia *Kademlia) Store(data []byte) {
 	hash := Hash(data)
 	file := Value{data, 0}
 	kademlia.m[hash] = file
-	// TODO
 }
 
+// Hashes a given byte splice
 func Hash(data []byte) string {
 	hashbytes := sha1.Sum(data)
 	hash := hex.EncodeToString(hashbytes[0:IDLength])
