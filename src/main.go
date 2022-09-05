@@ -15,7 +15,33 @@ import (
 func main() {
 	// Default ip and port for first connection to Kademlia network
 	port := 3000
-	defaultIp := "130.240.108.230"
+	// defaultIp := "130.240.109.14"
+	defaultIp := "172.19.0.2"
+
+	/** //! UNCOMMENT THIS WHEN WE WANT TO GO TO PRODUCTION
+	ip := getOutboundIP()
+	var currentContact Contact
+	var network *Network
+	if ip.String() == defaultIp {
+		// If we are at the local network address we just open the port at 3000
+		currentContact, network = createCurrentContact(ip, port)
+		go network.Listen(ip.String(), port)
+	} else {
+		target := NewRandomKademliaID()
+		contact := NewContact(target, defaultIp+":"+strconv.Itoa(port))
+		rand.Seed(time.Now().UnixNano())
+		// random port number
+		port = rand.Intn(65535-1024) + 1024
+		currentContact, network = createCurrentContact(ip, port)
+		go network.Listen(ip.String(), port)
+		success := network.SendPingMessage(&contact)
+		if !success {
+			panic("failed to connect to p2p server")
+		}
+	}
+	fmt.Println("Current contact main", currentContact)
+	*/
+
 	// The target is just some random ID and default ip and port
 	target := NewRandomKademliaID()
 	contact := NewContact(target, defaultIp+":"+strconv.Itoa(port))
@@ -25,8 +51,12 @@ func main() {
 	// we store the success of the ping message, if the ping was successful then we can
 	// start our server on a random port number on our local network. Else we start ourself
 	// at default port.
-	success := network.SendPingMessage(&contact)
 	ip := getOutboundIP()
+	success := network.SendPingMessage(&contact)
+	if ip.String() != defaultIp && !success {
+		fmt.Println("Our IP address is", ip.String())
+		panic("Couldn't connect to p2p network")
+	}
 	if success {
 		rand.Seed(time.Now().UnixNano())
 		// random port number
