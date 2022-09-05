@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"strconv"
+	"strings"
 
 	. "github.com/D7024E-Distributed-Systems/Kademlia/src/d7024e"
 )
@@ -44,7 +45,8 @@ func handleUDPConnection(conn *net.UDPConn, Network *Network) {
 		log.Fatal(err)
 	}
 
-	// fmt.Println("\tReceived from UDP client :", string(buffer[:n]))
+	fmt.Println("\tReceived from UDP client :", string(buffer[:n]))
+
 	message := getResponseMessage(buffer[:n], Network)
 
 	// TODO: Call correct method depending on received message and reply
@@ -59,14 +61,30 @@ func handleUDPConnection(conn *net.UDPConn, Network *Network) {
 }
 
 func getResponseMessage(message []byte, Network *Network) []byte {
-	if string(message[:4]) == newPing().startMessage {
-		var contact *Contact
-		json.Unmarshal(message[4:], &contact)
-		if !VerifyContact(contact, Network) {
-			return []byte("Error: Invalid contact information")
-		}
-		Network.RoutingTable.AddContact(*contact)
+	messageCode := string(message[:4])
+	if messageCode == newPing().startMessage {
 		body, err := json.Marshal(Network.CurrentNode)
+		if err != nil {
+			log.Println(err)
+			panic(err)
+		}
+		ex := extractContact(message[4:], Network)
+		if ex != nil {
+			return ex
+		}
+		return body
+	} else if messageCode == newFindContact().startMessage {
+		res := strings.Split(string(message[4:]), ";")
+		var id *KademliaID
+		json.Unmarshal([]byte(res[0]), &id)
+		ex := extractContact([]byte(res[1]), Network)
+		if ex != nil {
+			fmt.Println(ex)
+			// return ex
+		}
+		closestNodes := Network.RoutingTable.FindClosestContacts(id, BucketSize)
+		closestNodes = append(closestNodes, *Network.CurrentNode)
+		body, err := json.Marshal(closestNodes)
 		if err != nil {
 			log.Println(err)
 			panic(err)
@@ -75,12 +93,22 @@ func getResponseMessage(message []byte, Network *Network) []byte {
 	} else {
 		return []byte("Error: Invalid RPC protocol")
 	}
+
 }
 
 /**
  * returns true if the contact information is correct
  */
 func VerifyContact(contact *Contact, network *Network) bool {
+	return !(contact == nil || contact.Address == "" || contact.ID == nil || contact.ID.Equals(network.CurrentNode.ID))
+}
 
-	return !(contact.Address == "" || contact.ID == nil || contact.ID.Equals(network.CurrentNode.ID))
+func extractContact(message []byte, network *Network) []byte {
+	var contact *Contact
+	json.Unmarshal(message, &contact)
+	if !VerifyContact(contact, network) {
+		return []byte("Error: Invalid contact information")
+	}
+	network.RoutingTable.AddContact(*contact)
+	return nil
 }
