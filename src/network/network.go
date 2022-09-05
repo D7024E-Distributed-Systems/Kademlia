@@ -15,7 +15,7 @@ import (
  * find data = FIDA
  * store message = STME
  */
-var maxBytes int = 1024
+var maxBytes int = 4096
 
 func (network *Network) SendPingMessage(contact *Contact) bool {
 	conn, err3 := net.Dial("udp4", contact.Address)
@@ -38,11 +38,7 @@ func (network *Network) SendPingMessage(contact *Contact) bool {
 
 func getPingMessage(network *Network) []byte {
 	startMessage := []byte(newPing().startMessage)
-	body, err := json.Marshal(network.CurrentNode)
-	if err != nil {
-		log.Println(err)
-		panic(err)
-	}
+	body := network.marshalCurrentNode()
 	return append(startMessage, body...)
 }
 
@@ -60,8 +56,50 @@ func handlePingResponse(message []byte, network *Network) {
 	// fmt.Println("ping response: ", network.routingTable)
 }
 
-func (network *Network) SendFindContactMessage(contact *Contact) {
+func (network *Network) SendFindContactMessage(contact *Contact, nodeID *KademliaID) bool {
+	conn, err3 := net.Dial("udp4", contact.Address)
+	if err3 != nil {
+		log.Println(err3)
+	}
+	defer conn.Close()
+	message := getFindContactMessage(network, nodeID)
+	conn.Write(message)
+	buffer := make([]byte, maxBytes)
+	conn.SetReadDeadline(time.Now().Add(2 * time.Second))
+	n, err := conn.Read(buffer)
+	if err != nil {
+		return false
+	}
+	// fmt.Println("\tResponse from server:", string(buffer[:n]))
+	handeFindContactResponse(buffer[:n], network)
+	return true
 	// TODO
+}
+
+func getFindContactMessage(network *Network, nodeID *KademliaID) []byte {
+	body, err := json.Marshal(nodeID)
+	if err != nil {
+		log.Println(err)
+	}
+	startMessage := []byte(newFindContact().startMessage + string(body) + ";")
+	body2 := network.marshalCurrentNode()
+	return append(startMessage, body2...)
+
+}
+
+func handeFindContactResponse(message []byte, network *Network) {
+	if string(message[:5]) == "Error" {
+		log.Println(string(message))
+		return
+	} else {
+		var contacts []Contact
+		json.Unmarshal(message, &contacts)
+		for _, contact := range contacts {
+			if VerifyContact(&contact, network) {
+				network.RoutingTable.AddContact(contact)
+			}
+		}
+	}
 }
 
 func (network *Network) SendFindDataMessage(hash string) {
@@ -70,4 +108,13 @@ func (network *Network) SendFindDataMessage(hash string) {
 
 func (network *Network) SendStoreMessage(data []byte) {
 	// TODO
+}
+
+func (network *Network) marshalCurrentNode() []byte {
+	body, err := json.Marshal(network.CurrentNode)
+	if err != nil {
+		log.Println(err)
+		panic(err)
+	}
+	return body
 }

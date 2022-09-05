@@ -65,11 +65,18 @@ func main() {
 	currentContact, network = createCurrentContact(ip, port)
 	go network.Listen(ip.String(), port)
 	// go network.SendFindContactMessage(&currentContact)
-	go network.SendPingMessage(&contact)
+	// go network.SendPingMessage(&contact)
+	go network.SendFindContactMessage(&contact, currentContact.ID)
 	fmt.Println("Current contact main", currentContact)
+	i := 0
 	for {
 		fmt.Println(network.RoutingTable.FindClosestContacts(currentContact.ID, 1000))
 		time.Sleep(15 * time.Second)
+		i++
+
+		if i == 2 {
+			network.SendFindContactMessage(&contact, contact.ID)
+		}
 	}
 }
 
