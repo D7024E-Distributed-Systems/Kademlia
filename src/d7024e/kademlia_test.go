@@ -26,16 +26,15 @@ func TestLookupData(t *testing.T) {
 	token := make([]byte, 255)
 	rand.Read(token)
 	fmt.Println(token)
-	kd.Store(token)
-	response := kd.LookupData(Hash(token))
+	hash := kd.Store(token)
+	response := kd.LookupData(hash)
 	if response == nil {
 		t.Fail()
 	}
 
-	token2 := make([]byte, 255)
-	rand.Read(token2)
-	fmt.Println(token2)
-	response = kd.LookupData(Hash(token2))
+	rand.Read(token)
+	fmt.Println(token)
+	response = kd.LookupData(Hash(token))
 
 	if response != nil {
 		t.Fail()

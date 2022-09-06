@@ -5,6 +5,8 @@ import (
 	"encoding/hex"
 )
 
+const alpha = 3
+
 type Kademlia struct {
 	m map[string]Value
 }
@@ -24,7 +26,7 @@ func (kademlia *Kademlia) LookupContact(target *Contact) {
 	// TODO
 }
 
-// Checks if data is stored in this node
+// Checks if data is stored in this node, returns data if found
 func (kademlia *Kademlia) LookupData(hash string) []byte {
 	value, exists := kademlia.m[hash]
 	if exists {
@@ -33,11 +35,12 @@ func (kademlia *Kademlia) LookupData(hash string) []byte {
 	return nil
 }
 
-// Stores data in the node
-func (kademlia *Kademlia) Store(data []byte) {
+// Stores data in this node, returns hash of object
+func (kademlia *Kademlia) Store(data []byte) string {
 	hash := Hash(data)
 	file := Value{data, 0}
 	kademlia.m[hash] = file
+	return hash
 }
 
 // Hashes a given byte splice
