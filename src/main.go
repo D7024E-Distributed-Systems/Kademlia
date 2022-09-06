@@ -73,10 +73,6 @@ func main() {
 		fmt.Println(network.RoutingTable.FindClosestContacts(currentContact.ID, 1000))
 		time.Sleep(15 * time.Second)
 		i++
-
-		if i == 2 {
-			network.SendFindContactMessage(&contact, contact.ID)
-		}
 	}
 }
 

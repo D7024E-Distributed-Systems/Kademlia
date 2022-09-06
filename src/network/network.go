@@ -71,7 +71,7 @@ func (network *Network) SendFindContactMessage(contact *Contact, nodeID *Kademli
 		return false
 	}
 	// fmt.Println("\tResponse from server:", string(buffer[:n]))
-	handeFindContactResponse(buffer[:n], network)
+	handelFindContactResponse(buffer[:n], network)
 	return true
 	// TODO
 }
@@ -87,7 +87,7 @@ func getFindContactMessage(network *Network, nodeID *KademliaID) []byte {
 
 }
 
-func handeFindContactResponse(message []byte, network *Network) {
+func handelFindContactResponse(message []byte, network *Network) {
 	if string(message[:5]) == "Error" {
 		log.Println(string(message))
 		return
@@ -97,6 +97,7 @@ func handeFindContactResponse(message []byte, network *Network) {
 		for _, contact := range contacts {
 			if VerifyContact(&contact, network) {
 				network.RoutingTable.AddContact(contact)
+				network.SendPingMessage(&contact)
 			}
 		}
 	}
