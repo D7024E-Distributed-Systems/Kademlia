@@ -96,7 +96,6 @@ func handelFindContactResponse(message []byte, network *Network) {
 		json.Unmarshal(message, &contacts)
 		for _, contact := range contacts {
 			if VerifyContact(&contact, network) {
-				network.RoutingTable.AddContact(contact)
 				network.SendPingMessage(&contact)
 			}
 		}
