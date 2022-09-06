@@ -30,3 +30,17 @@ func TestPingNode(t *testing.T) {
 
 	return
 }
+
+func TestFindNode(t *testing.T) {
+	nodeID := d7024e.NewRandomKademliaID()
+	contact := d7024e.NewContact(nodeID, "127.0.0.1:8000")
+	network := NewNetwork(&contact)
+
+	go network.Listen("127.0.0.1", 8000)
+
+	go network.SendFindContactMessage(&contact, nodeID)
+
+	time.Sleep(1 * time.Millisecond)
+
+	return
+}
