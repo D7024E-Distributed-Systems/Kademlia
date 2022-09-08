@@ -71,7 +71,7 @@ func (network *Network) SendFindContactMessage(contact *Contact, nodeID *Kademli
 		return false
 	}
 	// fmt.Println("\tResponse from server:", string(buffer[:n]))
-	handelFindContactResponse(buffer[:n], network)
+	handleFindContactResponse(buffer[:n], network)
 	return true
 	// TODO
 }
@@ -87,7 +87,7 @@ func getFindContactMessage(network *Network, nodeID *KademliaID) []byte {
 
 }
 
-func handelFindContactResponse(message []byte, network *Network) {
+func handleFindContactResponse(message []byte, network *Network) {
 	if string(message[:5]) == "Error" {
 		log.Println(string(message))
 		return
@@ -106,8 +106,47 @@ func (network *Network) SendFindDataMessage(hash string) {
 	// TODO
 }
 
-func (network *Network) SendStoreMessage(data []byte) {
+func (network *Network) SendStoreMessage(data []byte, contact *Contact) bool {
+	conn, err3 := net.Dial("udp4", contact.Address)
+	if err3 != nil {
+		log.Println(err3)
+	}
+	defer conn.Close()
+	message := getStoreMessage(network, data)
+	conn.Write(message)
+	buffer := make([]byte, maxBytes)
+	conn.SetReadDeadline(time.Now().Add(2 * time.Second))
+	n, err := conn.Read(buffer)
+	if err != nil {
+		return false
+	}
+	// fmt.Println("\tResponse from server:", string(buffer[:n]))
+	handleStoreResponse(buffer[:n], network)
+	return true
 	// TODO
+}
+
+func getStoreMessage(network *Network, data []byte) []byte {
+	body, err := json.Marshal(data)
+	if err != nil {
+		log.Println(err)
+	}
+	startMessage := []byte(newStoreMessage().startMessage + ";" + string(body) + ";")
+	body2 := network.marshalCurrentNode()
+	return append(startMessage, body2...)
+}
+
+func handleStoreResponse(message []byte, network *Network) {
+	if string(message[:5]) == "Error" {
+		log.Println(string(message))
+		return
+	} else {
+		var contact *Contact
+		json.Unmarshal(message, &contact)
+		if VerifyContact(contact, network) {
+			network.RoutingTable.AddContact(*contact)
+		}
+	}
 }
 
 func (network *Network) marshalCurrentNode() []byte {
