@@ -37,7 +37,7 @@ func (network *Network) SendPingMessage(contact *Contact) bool {
 }
 
 func getPingMessage(network *Network) []byte {
-	startMessage := []byte(newPing().startMessage)
+	startMessage := []byte(newPing().startMessage + ";")
 	body := network.marshalCurrentNode()
 	return append(startMessage, body...)
 }
@@ -81,7 +81,7 @@ func getFindContactMessage(network *Network, nodeID *KademliaID) []byte {
 	if err != nil {
 		log.Println(err)
 	}
-	startMessage := []byte(newFindContact().startMessage + string(body) + ";")
+	startMessage := []byte(newFindContact().startMessage + ";" + string(body) + ";")
 	body2 := network.marshalCurrentNode()
 	return append(startMessage, body2...)
 

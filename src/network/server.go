@@ -61,23 +61,22 @@ func handleUDPConnection(conn *net.UDPConn, Network *Network) {
 }
 
 func getResponseMessage(message []byte, Network *Network) []byte {
-	messageCode := string(message[:4])
-	if messageCode == newPing().startMessage {
+	resMessage := strings.Split(string(message), ";")
+	if resMessage[0] == newPing().startMessage {
 		body, err := json.Marshal(Network.CurrentNode)
 		if err != nil {
 			log.Println(err)
 			panic(err)
 		}
-		ex := extractContact(message[4:], Network)
+		ex := extractContact([]byte(resMessage[1]), Network)
 		if ex != nil {
 			return ex
 		}
 		return body
-	} else if messageCode == newFindContact().startMessage {
-		res := strings.Split(string(message[4:]), ";")
+	} else if resMessage[0] == newFindContact().startMessage {
 		var id *KademliaID
-		json.Unmarshal([]byte(res[0]), &id)
-		ex := extractContact([]byte(res[1]), Network)
+		json.Unmarshal([]byte(resMessage[1]), &id)
+		ex := extractContact([]byte(resMessage[2]), Network)
 		if ex != nil {
 			fmt.Println(ex)
 			// return ex
