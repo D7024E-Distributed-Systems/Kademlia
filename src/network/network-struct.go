@@ -5,10 +5,11 @@ import (
 )
 
 type Network struct {
+	Kademlia     *Kademlia
 	CurrentNode  *Contact
 	RoutingTable *RoutingTable
 }
 
 func NewNetwork(node *Contact) *Network {
-	return &Network{node, NewRoutingTable(*node)}
+	return &Network{NewKademliaStruct(), node, NewRoutingTable(*node)}
 }
