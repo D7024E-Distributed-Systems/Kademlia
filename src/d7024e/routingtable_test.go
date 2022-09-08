@@ -40,3 +40,10 @@ func TestRandomID(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func testAddContactSameId(t *testing.T) {
+	contact := NewContact(NewKademliaID("FFFFFFFF00000000000000000000000000000000"), "localhost:8001")
+	rt := NewRoutingTable(NewContact(NewKademliaID("FFFFFFFF00000000000000000000000000000000"), "localhost:8000"))
+	rt.AddContact(NewContact(contact)
+	rt.AddContact(NewContact(contact)
+}
