@@ -89,6 +89,21 @@ func getResponseMessage(message []byte, Network *Network) []byte {
 			panic(err)
 		}
 		return body
+	} else if resMessage[0] == newStoreMessage().startMessage {
+		var data *[]byte
+		json.Unmarshal([]byte(resMessage[1]), &data)
+		Network.Kademlia.Store(*data)
+		ex := extractContact([]byte(resMessage[2]), Network)
+		if ex != nil {
+			fmt.Println(ex)
+			// return ex
+		}
+		body, err := json.Marshal(Network.CurrentNode)
+		if err != nil {
+			log.Println(err)
+			panic(err)
+		}
+		return body
 	} else {
 		return []byte("Error: Invalid RPC protocol")
 	}
