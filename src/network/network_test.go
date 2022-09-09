@@ -5,12 +5,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/D7024E-Distributed-Systems/Kademlia/src/d7024e"
+	. "github.com/D7024E-Distributed-Systems/Kademlia/src/kademlia"
 )
 
 func TestNetworkStruct(t *testing.T) {
-	nodeID := d7024e.NewRandomKademliaID()
-	contact := d7024e.NewContact(nodeID, "127.0.0.1:3000")
+	nodeID := NewRandomKademliaID()
+	contact := NewContact(nodeID, "127.0.0.1:3000")
 
 	network := NewNetwork(&contact)
 
@@ -18,8 +18,8 @@ func TestNetworkStruct(t *testing.T) {
 }
 
 func TestPingNode(t *testing.T) {
-	nodeID := d7024e.NewRandomKademliaID()
-	contact := d7024e.NewContact(nodeID, "127.0.0.1:8000")
+	nodeID := NewRandomKademliaID()
+	contact := NewContact(nodeID, "127.0.0.1:8000")
 	network := NewNetwork(&contact)
 
 	go network.Listen("127.0.0.1", 8000)
@@ -32,8 +32,8 @@ func TestPingNode(t *testing.T) {
 }
 
 func TestFindNode(t *testing.T) {
-	nodeID := d7024e.NewRandomKademliaID()
-	contact := d7024e.NewContact(nodeID, "127.0.0.1:8000")
+	nodeID := NewRandomKademliaID()
+	contact := NewContact(nodeID, "127.0.0.1:8000")
 	network := NewNetwork(&contact)
 
 	go network.Listen("127.0.0.1", 8000)

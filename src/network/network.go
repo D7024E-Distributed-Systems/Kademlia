@@ -6,7 +6,7 @@ import (
 	"net"
 	"time"
 
-	. "github.com/D7024E-Distributed-Systems/Kademlia/src/d7024e"
+	. "github.com/D7024E-Distributed-Systems/Kademlia/src/kademlia"
 )
 
 /**
