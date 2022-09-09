@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/D7024E-Distributed-Systems/Kademlia/src/cli"
-	. "github.com/D7024E-Distributed-Systems/Kademlia/src/d7024e"
+	. "github.com/D7024E-Distributed-Systems/Kademlia/src/kademlia"
 	. "github.com/D7024E-Distributed-Systems/Kademlia/src/network"
 )
 
