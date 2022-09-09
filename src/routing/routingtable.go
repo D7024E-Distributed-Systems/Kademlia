@@ -1,4 +1,8 @@
-package d7024e
+package routing
+
+import (
+	. "github.com/D7024E-Distributed-Systems/Kademlia/src/kademlia"
+)
 
 const BucketSize = 20
 

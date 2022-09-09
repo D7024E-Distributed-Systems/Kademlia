@@ -1,7 +1,9 @@
-package d7024e
+package routing
 
 import (
 	"container/list"
+
+	. "github.com/D7024E-Distributed-Systems/Kademlia/src/kademlia"
 )
 
 // bucket definition
