@@ -105,6 +105,32 @@ func getResponseMessage(message []byte, Network *Network) []byte {
 			panic(err)
 		}
 		return body
+	} else if resMessage[0] == newFindData().startMessage {
+		var hash *KademliaID
+		json.Unmarshal([]byte(resMessage[1]), &hash)
+		ex := extractContact([]byte(resMessage[2]), Network)
+		if ex != nil {
+			fmt.Println(ex)
+			// return ex
+		}
+		val := Network.Kademlia.LookupData(*hash)
+		if val != nil {
+			body, err := json.Marshal(*Network.CurrentNode)
+			if err != nil {
+				log.Println(err)
+				panic(err)
+			}
+			return []byte("VALU;" + string(val) + string(body))
+		}
+		closestNodes := Network.RoutingTable.FindClosestContacts(hash, BucketSize)
+		closestNodes = append(closestNodes, *Network.CurrentNode)
+		body, err := json.Marshal(closestNodes)
+		if err != nil {
+			log.Println(err)
+			panic(err)
+		}
+		return []byte("CONT" + string(body))
+
 	} else {
 		return []byte("Error: Invalid RPC protocol")
 	}

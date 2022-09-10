@@ -34,7 +34,7 @@ func TestLookupData(t *testing.T) {
 
 	rand.Read(token)
 	fmt.Println(token)
-	response = kd.LookupData(Hash(token))
+	response = kd.LookupData(*NewKademliaID(string(token)))
 
 	if response != nil {
 		t.Fail()

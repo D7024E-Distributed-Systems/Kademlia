@@ -101,7 +101,7 @@ func handleFindContactResponse(message []byte, network *Network) {
 	}
 }
 
-func (network *Network) SendFindDataMessage(hash string, contact *Contact) {
+func (network *Network) SendFindDataMessage(hash string, contact *Contact) bool {
 	conn, err3 := net.Dial("udp4", contact.Address)
 	if err3 != nil {
 		log.Println(err3)
@@ -131,6 +131,27 @@ func getFindDataMessage(network *Network, hash string) []byte {
 	body2 := network.marshalCurrentNode()
 	return append(startMessage, body2...)
 
+}
+
+func handleSendDataResponse(message []byte, network *Network) string {
+	if string(message[:5]) == "Error" {
+		log.Println(string(message))
+		return string(message)
+	} else {
+		if string(message[:4]) == "VALU" {
+			var data string
+			json.Unmarshal(message[5:], &data)
+			return data
+		}
+		var contacts []Contact
+		json.Unmarshal(message, &contacts)
+		for _, contact := range contacts {
+			if VerifyContact(&contact, network) {
+				network.SendPingMessage(&contact)
+			}
+		}
+		return string(message[5:])
+	}
 }
 
 func (network *Network) SendStoreMessage(data []byte, contact *Contact) bool {
