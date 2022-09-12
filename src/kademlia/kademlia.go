@@ -8,7 +8,7 @@ import (
 const alpha = 3
 
 type Kademlia struct {
-	m map[string]Value
+	m map[KademliaID]Value
 }
 
 type Value struct {
@@ -18,7 +18,7 @@ type Value struct {
 
 func NewKademliaStruct() *Kademlia {
 	kademlia := &Kademlia{}
-	kademlia.m = make(map[string]Value)
+	kademlia.m = make(map[KademliaID]Value)
 	return kademlia
 }
 
@@ -27,7 +27,7 @@ func (kademlia *Kademlia) LookupContact(target *Contact) {
 }
 
 // Checks if data is stored in this node, returns data if found
-func (kademlia *Kademlia) LookupData(hash string) []byte {
+func (kademlia *Kademlia) LookupData(hash KademliaID) []byte {
 	value, exists := kademlia.m[hash]
 	if exists {
 		return value.data
@@ -36,11 +36,11 @@ func (kademlia *Kademlia) LookupData(hash string) []byte {
 }
 
 // Stores data in this node, returns hash of object
-func (kademlia *Kademlia) Store(data []byte) string {
-	hash := Hash(data)
+func (kademlia *Kademlia) Store(data []byte) KademliaID {
+	hash := NewKademliaID(string(data))
 	file := Value{data, 0}
-	kademlia.m[hash] = file
-	return hash
+	kademlia.m[*hash] = file
+	return *hash
 }
 
 // Hashes a given byte splice

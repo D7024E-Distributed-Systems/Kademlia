@@ -2,7 +2,6 @@ package kademlia
 
 import (
 	"fmt"
-	"math/rand"
 	"testing"
 )
 
@@ -13,7 +12,7 @@ func TestInsertData(t *testing.T) {
 		t.Fail()
 	}
 
-	kd.Store(make([]byte, 255))
+	kd.Store([]byte("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"))
 
 	if len(kd.m) != 1 {
 		fmt.Println(len(kd.m))
@@ -23,8 +22,7 @@ func TestInsertData(t *testing.T) {
 
 func TestLookupData(t *testing.T) {
 	kd := NewKademliaStruct()
-	token := make([]byte, 255)
-	rand.Read(token)
+	token := []byte("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
 	fmt.Println(token)
 	hash := kd.Store(token)
 	response := kd.LookupData(hash)
@@ -32,9 +30,8 @@ func TestLookupData(t *testing.T) {
 		t.Fail()
 	}
 
-	rand.Read(token)
 	fmt.Println(token)
-	response = kd.LookupData(Hash(token))
+	response = kd.LookupData(*NewRandomKademliaID())
 
 	if response != nil {
 		t.Fail()

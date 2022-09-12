@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net"
+	"strings"
 	"time"
 
 	. "github.com/D7024E-Distributed-Systems/Kademlia/src/kademlia"
@@ -73,7 +74,6 @@ func (network *Network) SendFindContactMessage(contact *Contact, nodeID *Kademli
 	// fmt.Println("\tResponse from server:", string(buffer[:n]))
 	handleFindContactResponse(buffer[:n], network)
 	return true
-	// TODO
 }
 
 func getFindContactMessage(network *Network, nodeID *KademliaID) []byte {
@@ -102,8 +102,63 @@ func handleFindContactResponse(message []byte, network *Network) {
 	}
 }
 
-func (network *Network) SendFindDataMessage(hash string) {
+func (network *Network) SendFindDataMessage(hash *KademliaID, contact *Contact) bool {
+	conn, err3 := net.Dial("udp4", contact.Address)
+	if err3 != nil {
+		log.Println(err3)
+	}
+	defer conn.Close()
+	message := getFindDataMessage(network, hash)
+	conn.Write(message)
+	buffer := make([]byte, maxBytes)
+	conn.SetReadDeadline(time.Now().Add(2 * time.Second))
+	n, err := conn.Read(buffer)
+	if err != nil {
+		return false
+	}
+	// fmt.Println("\tResponse from server:", string(buffer[:n]))
+	handleSendDataResponse(buffer[:n], network)
+	return true
+
 	// TODO
+}
+
+func getFindDataMessage(network *Network, hash *KademliaID) []byte {
+	body, err := json.Marshal(hash)
+	if err != nil {
+		log.Println(err)
+	}
+	startMessage := []byte(newFindData().startMessage + ";" + string(body) + ";")
+	body2 := network.marshalCurrentNode()
+	return append(startMessage, body2...)
+
+}
+
+func handleSendDataResponse(message []byte, network *Network) string {
+	if string(message[:5]) == "Error" {
+		log.Println(string(message))
+		return string(message)
+	} else {
+		if string(message[:4]) == "VALU" {
+			resMessage := strings.Split(string(message[5:]), ";")
+			var data string
+			json.Unmarshal([]byte(resMessage[0]), &data)
+			var contact *Contact
+			json.Unmarshal([]byte(resMessage[1]), &contact)
+			if VerifyContact(contact, network) {
+				network.RoutingTable.AddContact(*contact)
+			}
+			return data
+		}
+		var contacts []Contact
+		json.Unmarshal(message, &contacts)
+		for _, contact := range contacts {
+			if VerifyContact(&contact, network) {
+				network.SendPingMessage(&contact)
+			}
+		}
+		return string(message[5:])
+	}
 }
 
 func (network *Network) SendStoreMessage(data []byte, contact *Contact) bool {
@@ -123,7 +178,6 @@ func (network *Network) SendStoreMessage(data []byte, contact *Contact) bool {
 	// fmt.Println("\tResponse from server:", string(buffer[:n]))
 	handleStoreResponse(buffer[:n], network)
 	return true
-	// TODO
 }
 
 func getStoreMessage(network *Network, data []byte) []byte {
