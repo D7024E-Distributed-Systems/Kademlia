@@ -80,7 +80,7 @@ func getResponseMessage(message []byte, Network *Network) []byte {
 		ex := extractContact([]byte(resMessage[2]), Network)
 		if ex != nil {
 			fmt.Println(ex)
-			// return ex
+			return ex
 		}
 		closestNodes := Network.RoutingTable.FindClosestContacts(id, BucketSize)
 		closestNodes = append(closestNodes, *Network.CurrentNode)
@@ -97,7 +97,7 @@ func getResponseMessage(message []byte, Network *Network) []byte {
 		ex := extractContact([]byte(resMessage[2]), Network)
 		if ex != nil {
 			fmt.Println(ex)
-			// return ex
+			return ex
 		}
 		body, err := json.Marshal(Network.CurrentNode)
 		if err != nil {
@@ -111,7 +111,7 @@ func getResponseMessage(message []byte, Network *Network) []byte {
 		ex := extractContact([]byte(resMessage[2]), Network)
 		if ex != nil {
 			fmt.Println(ex)
-			// return ex
+			return ex
 		}
 		val := Network.Kademlia.LookupData(*hash)
 		if val != nil {
@@ -120,7 +120,7 @@ func getResponseMessage(message []byte, Network *Network) []byte {
 				log.Println(err)
 				panic(err)
 			}
-			return []byte("VALU;" + string(val) + string(body))
+			return []byte("VALU;" + string(val) + ";" + string(body))
 		}
 		closestNodes := Network.RoutingTable.FindClosestContacts(hash, BucketSize)
 		closestNodes = append(closestNodes, *Network.CurrentNode)

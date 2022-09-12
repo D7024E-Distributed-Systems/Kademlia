@@ -15,8 +15,8 @@ import (
 func main() {
 	// Default ip and port for first connection to Kademlia network
 	port := 3000
-	// defaultIp := "130.240.109.14"
-	defaultIp := "172.19.0.2"
+	// defaultIp := "130.240.156.194"
+	defaultIp := "173.19.0.2"
 
 	/** //! UNCOMMENT THIS WHEN WE WANT TO GO TO PRODUCTION
 	ip := getOutboundIP()
@@ -67,11 +67,15 @@ func main() {
 	// go network.SendFindContactMessage(&currentContact)
 	// go network.SendPingMessage(&contact)
 	go network.SendFindContactMessage(&contact, currentContact.ID)
+	// network.SendStoreMessage([]byte("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"), &contact)
+	// hash := NewKademliaID("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+	// network.SendFindDataMessage(hash, &contact)
 	fmt.Println("Current contact main", currentContact)
 	i := 0
 	for {
 		fmt.Println(network.RoutingTable.FindClosestContacts(currentContact.ID, 1000))
 		time.Sleep(15 * time.Second)
+		// network.SendFindDataMessage(hash, &contact)
 		i++
 	}
 }

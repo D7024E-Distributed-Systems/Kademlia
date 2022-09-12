@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net"
+	"strings"
 	"time"
 
 	. "github.com/D7024E-Distributed-Systems/Kademlia/src/kademlia"
@@ -101,7 +102,7 @@ func handleFindContactResponse(message []byte, network *Network) {
 	}
 }
 
-func (network *Network) SendFindDataMessage(hash string, contact *Contact) bool {
+func (network *Network) SendFindDataMessage(hash *KademliaID, contact *Contact) bool {
 	conn, err3 := net.Dial("udp4", contact.Address)
 	if err3 != nil {
 		log.Println(err3)
@@ -122,12 +123,12 @@ func (network *Network) SendFindDataMessage(hash string, contact *Contact) bool 
 	// TODO
 }
 
-func getFindDataMessage(network *Network, hash string) []byte {
+func getFindDataMessage(network *Network, hash *KademliaID) []byte {
 	body, err := json.Marshal(hash)
 	if err != nil {
 		log.Println(err)
 	}
-	startMessage := []byte(newFindContact().startMessage + ";" + string(body) + ";")
+	startMessage := []byte(newFindData().startMessage + ";" + string(body) + ";")
 	body2 := network.marshalCurrentNode()
 	return append(startMessage, body2...)
 
@@ -139,8 +140,14 @@ func handleSendDataResponse(message []byte, network *Network) string {
 		return string(message)
 	} else {
 		if string(message[:4]) == "VALU" {
+			resMessage := strings.Split(string(message[5:]), ";")
 			var data string
-			json.Unmarshal(message[5:], &data)
+			json.Unmarshal([]byte(resMessage[0]), &data)
+			var contact *Contact
+			json.Unmarshal([]byte(resMessage[1]), &contact)
+			if VerifyContact(contact, network) {
+				network.RoutingTable.AddContact(*contact)
+			}
 			return data
 		}
 		var contacts []Contact
