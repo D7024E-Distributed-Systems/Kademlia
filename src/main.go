@@ -64,22 +64,27 @@ func main() {
 		rand.Seed(time.Now().UnixNano())
 		// random port number
 		port = rand.Intn(65535-1024) + 1024
+		network.SendStoreMessage([]byte("String"), 30*time.Second, &contact)
 	}
 	currentContact, network = createCurrentContact(ip, port)
 	go network.Listen(ip.String(), port)
 	// go network.SendFindContactMessage(&currentContact)
 	// go network.SendPingMessage(&contact)
 	go network.SendFindContactMessage(&contact, currentContact.ID)
-	// network.SendStoreMessage([]byte("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"), &contact)
-	// hash := NewKademliaID("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-	// network.SendFindDataMessage(hash, &contact)
+	hash := NewKademliaID("String")
 	fmt.Println("Current contact main", currentContact)
 	i := 0
 	for {
 		fmt.Println(network.RoutingTable.FindClosestContacts(currentContact.ID, 1000))
 		network.Kademlia.DeleteOldData()
-		time.Sleep(1 * time.Second)
-		// network.SendFindDataMessage(hash, &contact)
+		fmt.Println("KNOWN HOLDERS ARE:", network.Kademlia.KnownHolders)
+		for contact, hash := range network.Kademlia.KnownHolders {
+			fmt.Println("SENDING REFRESH")
+			go network.SendRefreshMessage(&hash, &contact)
+		}
+		time.Sleep(3 * time.Second)
+		res := network.SendFindDataMessage(hash, &contact)
+		fmt.Println("THE SAVED VALUE IS:", res)
 		i++
 	}
 }

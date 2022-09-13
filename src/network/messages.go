@@ -38,3 +38,11 @@ type StoreMessage struct {
 func newStoreMessage() *StoreMessage {
 	return &StoreMessage{"STME"}
 }
+
+type RefreshMessage struct {
+	startMessage string
+}
+
+func newRefreshmessage() *RefreshMessage {
+	return &RefreshMessage{"REFR"}
+}

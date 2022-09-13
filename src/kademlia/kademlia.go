@@ -1,13 +1,15 @@
 package kademlia
 
 import (
+	"fmt"
 	"time"
 )
 
 const alpha = 3
 
 type Kademlia struct {
-	m map[KademliaID]Value
+	m            map[KademliaID]Value
+	KnownHolders map[Contact]KademliaID
 }
 
 type Value struct {
@@ -20,6 +22,7 @@ type Value struct {
 func NewKademliaStruct() *Kademlia {
 	kademlia := &Kademlia{}
 	kademlia.m = make(map[KademliaID]Value)
+	kademlia.KnownHolders = make(map[Contact]KademliaID)
 	return kademlia
 }
 
@@ -31,7 +34,7 @@ func (kademlia *Kademlia) LookupContact(target *Contact) {
 func (kademlia *Kademlia) LookupData(hash KademliaID) []byte {
 	value, exists := kademlia.m[hash]
 	if exists {
-		value.deadAt = time.Now().Add(value.TTL)
+		// value.deadAt = time.Now().Add(value.TTL)
 		return value.data
 	}
 	return nil
@@ -51,4 +54,16 @@ func (kademlia *Kademlia) DeleteOldData() {
 			delete(kademlia.m, hash)
 		}
 	}
+}
+
+func (kademlia *Kademlia) RefreshTTL(hash KademliaID) {
+	value, exists := kademlia.m[hash]
+	if exists {
+		fmt.Println("REFRESHED!")
+		value.deadAt = time.Now().Add(value.TTL)
+	}
+}
+
+func (kademlia *Kademlia) AddToKnown(contact *Contact, hash *KademliaID) {
+	kademlia.KnownHolders[*contact] = *hash
 }
