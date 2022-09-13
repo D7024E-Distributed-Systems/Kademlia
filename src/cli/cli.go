@@ -7,26 +7,49 @@ import (
 	"strings"
 )
 
-func Init() {
-	go do()
+func Init(shutdownNode func()) {
+	go do(readLine, shutdownNode)
 }
 
-func do() {
-	reader := bufio.NewReader(os.Stdin)
+func do(readInput func() string, shutdownNode func()) {
 	for {
-		text, _ := reader.ReadString('\n')
-		text = strings.Replace(text, "\r\n", "", -1)
-		if strings.Compare("exit", text) == 0 {
-			fmt.Println("Are you sure you want to exit? Y/n")
-			text, _ := reader.ReadString('\n')
-			text = strings.Replace(text, "\r\n", "", -1)
-			if strings.Compare("Y", text) == 0 || strings.Compare("y", text) == 0 ||
-				strings.Compare("Yes", text) == 0 || strings.Compare("yes", text) == 0 {
-				os.Exit(0)
+		input := readInput()
+		if stringsEqual(input, "exit") {
+			if shouldExit(readInput) {
+				shutdownNode()
+				return
 			}
-		} else if strings.Compare("help", text) == 0 || strings.Compare("?", text) == 0 {
-			fmt.Println("Available commands:")
-			fmt.Println("\texit - shuts down the current node and all data will be lost")
+		} else if stringsEqual(input, "help") {
+			printHelp()
+		} else {
+			fmt.Println("Unknown command \"" + input + "\"")
 		}
+
 	}
+}
+
+func shouldExit(readInput func() string) bool {
+	fmt.Println("Are you sure you want to exit? Y/n")
+	text := readInput()
+	if stringsEqual(text, "Y") || stringsEqual(text, "y") ||
+		stringsEqual(text, "Yes") || stringsEqual(text, "yes") {
+		return true
+	}
+	return false
+}
+
+func printHelp() {
+	fmt.Println("Available commands:")
+	fmt.Println("\texit - shuts down the current node and all data will be lost.")
+}
+
+func stringsEqual(a, b string) bool {
+	return strings.Compare(a, b) == 0
+}
+
+func readLine() string {
+	scanner := bufio.NewScanner(os.Stdin)
+	fmt.Print("> ")
+	scanner.Scan()
+	return strings.Replace(scanner.Text(), "\r\n", "", -1)
 }
