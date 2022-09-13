@@ -7,6 +7,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"time"
 
 	. "github.com/D7024E-Distributed-Systems/Kademlia/src/kademlia"
 	. "github.com/D7024E-Distributed-Systems/Kademlia/src/routing"
@@ -93,8 +94,10 @@ func getResponseMessage(message []byte, Network *Network) []byte {
 	} else if resMessage[0] == newStoreMessage().startMessage {
 		var data *[]byte
 		json.Unmarshal([]byte(resMessage[1]), &data)
-		Network.Kademlia.Store(*data)
-		ex := extractContact([]byte(resMessage[2]), Network)
+		var ttl time.Duration
+		json.Unmarshal([]byte(resMessage[2]), &ttl)
+		Network.Kademlia.Store(*data, ttl)
+		ex := extractContact([]byte(resMessage[3]), Network)
 		if ex != nil {
 			fmt.Println(ex)
 			return ex

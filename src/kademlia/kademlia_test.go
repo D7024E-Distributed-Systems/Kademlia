@@ -3,6 +3,7 @@ package kademlia
 import (
 	"fmt"
 	"testing"
+	"time"
 )
 
 func TestInsertData(t *testing.T) {
@@ -12,7 +13,7 @@ func TestInsertData(t *testing.T) {
 		t.Fail()
 	}
 
-	kd.Store([]byte("AA"))
+	kd.Store([]byte("AA"), time.Minute)
 
 	if len(kd.m) != 1 {
 		fmt.Println(len(kd.m))
@@ -24,7 +25,7 @@ func TestLookupData(t *testing.T) {
 	kd := NewKademliaStruct()
 	token := []byte("AA")
 	fmt.Println(token)
-	hash := kd.Store(token)
+	hash := kd.Store(token, time.Minute)
 	response := kd.LookupData(hash)
 	if response == nil {
 		t.Fail()
@@ -34,6 +35,20 @@ func TestLookupData(t *testing.T) {
 	response = kd.LookupData(*NewRandomKademliaID())
 
 	if response != nil {
+		t.Fail()
+	}
+}
+
+func TestDeleteData(t *testing.T) {
+	kd := NewKademliaStruct()
+	token := []byte("AA")
+	fmt.Println(token)
+	kd.Store(token, time.Second)
+
+	time.Sleep(1 * time.Second)
+	kd.DeleteOldData()
+
+	if len(kd.m) != 0 {
 		t.Fail()
 	}
 }

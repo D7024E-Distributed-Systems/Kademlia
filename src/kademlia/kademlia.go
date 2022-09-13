@@ -1,8 +1,7 @@
 package kademlia
 
 import (
-	"crypto/sha1"
-	"encoding/hex"
+	"time"
 )
 
 const alpha = 3
@@ -14,6 +13,8 @@ type Kademlia struct {
 type Value struct {
 	data               []byte
 	timeSinceRepublish int
+	TTL                time.Duration
+	deadAt             time.Time
 }
 
 func NewKademliaStruct() *Kademlia {
@@ -30,22 +31,24 @@ func (kademlia *Kademlia) LookupContact(target *Contact) {
 func (kademlia *Kademlia) LookupData(hash KademliaID) []byte {
 	value, exists := kademlia.m[hash]
 	if exists {
+		value.deadAt = time.Now().Add(value.TTL)
 		return value.data
 	}
 	return nil
 }
 
 // Stores data in this node, returns hash of object
-func (kademlia *Kademlia) Store(data []byte) KademliaID {
+func (kademlia *Kademlia) Store(data []byte, ttl time.Duration) KademliaID {
 	hash := NewKademliaID(string(data))
-	file := Value{data, 0}
+	file := Value{data, 0, ttl, time.Now().Add(ttl)}
 	kademlia.m[*hash] = file
 	return *hash
 }
 
-// Hashes a given byte splice
-func Hash(data []byte) string {
-	hashbytes := sha1.Sum(data)
-	hash := hex.EncodeToString(hashbytes[0:IDLength])
-	return hash
+func (kademlia *Kademlia) DeleteOldData() {
+	for hash, value := range kademlia.m {
+		if time.Now().After(value.deadAt) {
+			delete(kademlia.m, hash)
+		}
+	}
 }
