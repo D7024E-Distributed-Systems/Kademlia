@@ -11,7 +11,6 @@ import (
 
 	"github.com/D7024E-Distributed-Systems/Kademlia/src/cli"
 	. "github.com/D7024E-Distributed-Systems/Kademlia/src/kademlia"
-	. "github.com/D7024E-Distributed-Systems/Kademlia/src/network"
 )
 
 func main() {

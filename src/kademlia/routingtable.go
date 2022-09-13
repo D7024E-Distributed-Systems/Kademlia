@@ -1,8 +1,4 @@
-package routing
-
-import (
-	. "github.com/D7024E-Distributed-Systems/Kademlia/src/kademlia"
-)
+package kademlia
 
 const BucketSize = 20
 

@@ -1,9 +1,7 @@
-package routing
+package kademlia
 
 import (
 	"container/list"
-
-	. "github.com/D7024E-Distributed-Systems/Kademlia/src/kademlia"
 )
 
 // bucket definition

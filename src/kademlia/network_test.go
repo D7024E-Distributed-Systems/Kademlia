@@ -1,11 +1,9 @@
-package network
+package kademlia
 
 import (
 	"fmt"
 	"testing"
 	"time"
-
-	. "github.com/D7024E-Distributed-Systems/Kademlia/src/kademlia"
 )
 
 func TestNetworkStruct(t *testing.T) {
