@@ -1,4 +1,4 @@
-package network
+package kademlia
 
 import (
 	"encoding/json"
@@ -6,8 +6,6 @@ import (
 	"net"
 	"strings"
 	"time"
-
-	. "github.com/D7024E-Distributed-Systems/Kademlia/src/kademlia"
 )
 
 /**

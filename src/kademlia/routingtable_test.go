@@ -1,10 +1,8 @@
-package routing
+package kademlia
 
 import (
 	"fmt"
 	"testing"
-
-	. "github.com/D7024E-Distributed-Systems/Kademlia/src/kademlia"
 )
 
 func TestRoutingTable(t *testing.T) {

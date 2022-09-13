@@ -1,4 +1,4 @@
-package network
+package kademlia
 
 import (
 	"encoding/json"
@@ -8,9 +8,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	. "github.com/D7024E-Distributed-Systems/Kademlia/src/kademlia"
-	. "github.com/D7024E-Distributed-Systems/Kademlia/src/routing"
 )
 
 func (Network *Network) Listen(ip string, port int) {
