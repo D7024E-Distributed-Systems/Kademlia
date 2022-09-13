@@ -74,7 +74,8 @@ func main() {
 	i := 0
 	for {
 		fmt.Println(network.RoutingTable.FindClosestContacts(currentContact.ID, 1000))
-		time.Sleep(15 * time.Second)
+		network.Kademlia.DeleteOldData()
+		time.Sleep(1 * time.Second)
 		// network.SendFindDataMessage(hash, &contact)
 		i++
 	}

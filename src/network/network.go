@@ -102,7 +102,7 @@ func handleFindContactResponse(message []byte, network *Network) {
 	}
 }
 
-func (network *Network) SendFindDataMessage(hash *KademliaID, contact *Contact) bool {
+func (network *Network) SendFindDataMessage(hash *KademliaID, contact *Contact) string {
 	conn, err3 := net.Dial("udp4", contact.Address)
 	if err3 != nil {
 		log.Println(err3)
@@ -114,11 +114,10 @@ func (network *Network) SendFindDataMessage(hash *KademliaID, contact *Contact) 
 	conn.SetReadDeadline(time.Now().Add(2 * time.Second))
 	n, err := conn.Read(buffer)
 	if err != nil {
-		return false
+		return "ERROR"
 	}
 	// fmt.Println("\tResponse from server:", string(buffer[:n]))
-	handleSendDataResponse(buffer[:n], network)
-	return true
+	return handleSendDataResponse(buffer[:n], network)
 
 	// TODO
 }
@@ -141,14 +140,12 @@ func handleSendDataResponse(message []byte, network *Network) string {
 	} else {
 		if string(message[:4]) == "VALU" {
 			resMessage := strings.Split(string(message[5:]), ";")
-			var data string
-			json.Unmarshal([]byte(resMessage[0]), &data)
 			var contact *Contact
 			json.Unmarshal([]byte(resMessage[1]), &contact)
 			if VerifyContact(contact, network) {
 				network.RoutingTable.AddContact(*contact)
 			}
-			return data
+			return resMessage[0]
 		}
 		var contacts []Contact
 		json.Unmarshal(message, &contacts)
@@ -161,13 +158,13 @@ func handleSendDataResponse(message []byte, network *Network) string {
 	}
 }
 
-func (network *Network) SendStoreMessage(data []byte, contact *Contact) bool {
+func (network *Network) SendStoreMessage(data []byte, ttl time.Duration, contact *Contact) bool {
 	conn, err3 := net.Dial("udp4", contact.Address)
 	if err3 != nil {
 		log.Println(err3)
 	}
 	defer conn.Close()
-	message := getStoreMessage(network, data)
+	message := getStoreMessage(network, data, ttl)
 	conn.Write(message)
 	buffer := make([]byte, maxBytes)
 	conn.SetReadDeadline(time.Now().Add(2 * time.Second))
@@ -180,14 +177,18 @@ func (network *Network) SendStoreMessage(data []byte, contact *Contact) bool {
 	return true
 }
 
-func getStoreMessage(network *Network, data []byte) []byte {
+func getStoreMessage(network *Network, data []byte, ttl time.Duration) []byte {
 	body, err := json.Marshal(data)
 	if err != nil {
 		log.Println(err)
 	}
-	startMessage := []byte(newStoreMessage().startMessage + ";" + string(body) + ";")
-	body2 := network.marshalCurrentNode()
-	return append(startMessage, body2...)
+	body2, err2 := json.Marshal(ttl)
+	if err2 != nil {
+		log.Println(err2)
+	}
+	startMessage := []byte(newStoreMessage().startMessage + ";" + string(body) + ";" + string(body2) + ";")
+	body3 := network.marshalCurrentNode()
+	return append(startMessage, body3...)
 }
 
 func handleStoreResponse(message []byte, network *Network) {
