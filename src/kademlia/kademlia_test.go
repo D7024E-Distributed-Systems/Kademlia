@@ -12,7 +12,7 @@ func TestInsertData(t *testing.T) {
 		t.Fail()
 	}
 
-	kd.Store([]byte("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"))
+	kd.Store([]byte("AA"))
 
 	if len(kd.m) != 1 {
 		fmt.Println(len(kd.m))
@@ -22,7 +22,7 @@ func TestInsertData(t *testing.T) {
 
 func TestLookupData(t *testing.T) {
 	kd := NewKademliaStruct()
-	token := []byte("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+	token := []byte("AA")
 	fmt.Println(token)
 	hash := kd.Store(token)
 	response := kd.LookupData(hash)
