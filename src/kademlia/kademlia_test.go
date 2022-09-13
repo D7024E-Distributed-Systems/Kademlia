@@ -7,8 +7,8 @@ import (
 )
 
 func TestLessThan(t *testing.T) {
-	nodeID := NewKademliaID("A")
-	nodeID2 := NewKademliaID("B")
+	nodeID := HashDataReturnKademliaID("A")
+	nodeID2 := HashDataReturnKademliaID("B")
 	res := nodeID.Less(nodeID2)
 	if !res {
 		t.Fail()
@@ -16,8 +16,8 @@ func TestLessThan(t *testing.T) {
 }
 
 func TestEqual(t *testing.T) {
-	nodeID := NewKademliaID("A")
-	nodeID2 := NewKademliaID("A")
+	nodeID := HashDataReturnKademliaID("A")
+	nodeID2 := HashDataReturnKademliaID("A")
 	res := nodeID.Equals(nodeID2)
 	if !res {
 		t.Fail()
@@ -25,8 +25,8 @@ func TestEqual(t *testing.T) {
 }
 
 func TestCalcDistance(t *testing.T) {
-	nodeID := NewKademliaID("K")
-	nodeID2 := NewKademliaID("AAAA")
+	nodeID := HashDataReturnKademliaID("K")
+	nodeID2 := HashDataReturnKademliaID("AAAA")
 	res := nodeID.CalcDistance(nodeID2)
 	if res.String() != "04055054010955505600030c05000d52070e5e07" {
 		t.Fail()
@@ -34,7 +34,8 @@ func TestCalcDistance(t *testing.T) {
 }
 
 func TestInsertData(t *testing.T) {
-	kd := NewKademliaStruct()
+	contact := NewContact(NewRandomKademliaID(), "localhost")
+	kd := NewKademliaStruct(NewNetwork(&contact))
 	if len(kd.m) != 0 {
 		fmt.Println(len(kd.m))
 		t.Fail()
@@ -49,7 +50,8 @@ func TestInsertData(t *testing.T) {
 }
 
 func TestLookupData(t *testing.T) {
-	kd := NewKademliaStruct()
+	contact := NewContact(NewRandomKademliaID(), "localhost")
+	kd := NewKademliaStruct(NewNetwork(&contact))
 	token := []byte("AA")
 	fmt.Println(token)
 	hash := kd.Store(token, time.Minute)
@@ -67,7 +69,8 @@ func TestLookupData(t *testing.T) {
 }
 
 func TestDeleteData(t *testing.T) {
-	kd := NewKademliaStruct()
+	contact := NewContact(NewRandomKademliaID(), "localhost")
+	kd := NewKademliaStruct(NewNetwork(&contact))
 	token := []byte("AA")
 	fmt.Println(token)
 	kd.Store(token, time.Second)
@@ -81,10 +84,10 @@ func TestDeleteData(t *testing.T) {
 }
 
 func TestContacts(t *testing.T) {
-	contact := NewContact(NewKademliaID("A"), "localhost")
-	contact2 := NewContact(NewKademliaID("B"), "localhost")
-	hash := NewKademliaID("B")
-	hash2 := NewKademliaID("B")
+	contact := NewContact(HashDataReturnKademliaID("A"), "localhost")
+	contact2 := NewContact(HashDataReturnKademliaID("B"), "localhost")
+	hash := HashDataReturnKademliaID("B")
+	hash2 := HashDataReturnKademliaID("B")
 	contact.CalcDistance(hash)
 	contact2.CalcDistance(hash2)
 
@@ -96,8 +99,8 @@ func TestContacts(t *testing.T) {
 }
 
 func TestContactCandidates(t *testing.T) {
-	contact := NewContact(NewKademliaID("A"), "localhost")
-	contact2 := NewContact(NewKademliaID("B"), "localhost")
+	contact := NewContact(HashDataReturnKademliaID("A"), "localhost")
+	contact2 := NewContact(HashDataReturnKademliaID("B"), "localhost")
 	contactCan := ContactCandidates{}
 
 	contactCan.Append([]Contact{contact, contact2})

@@ -17,8 +17,8 @@ func main() {
 	// Default ip and port for first connection to Kademlia network
 	port := 3000
 	// defaultIp := "130.240.156.194"
-	defaultIp := "173.19.0.2"
-	cli.Init(shutdownNode)
+	defaultIp := "172.19.0.2"
+	// defaultIp := "192.168.1.152"
 
 	/** //! UNCOMMENT THIS WHEN WE WANT TO GO TO PRODUCTION
 	ip := getOutboundIP()
@@ -49,44 +49,44 @@ func main() {
 	contact := NewContact(target, defaultIp+":"+strconv.Itoa(port))
 	// Our current contact, which is this node, will be some random ID and no address
 	currentContact := NewContact(NewRandomKademliaID(), "")
-	network := NewNetwork(&currentContact)
 	// we store the success of the ping message, if the ping was successful then we can
 	// start our server on a random port number on our local network. Else we start ourself
 	// at default port.
 	ip := getOutboundIP()
-	success := network.SendPingMessage(&contact)
+	fmt.Println(ip)
+	success := NewNetwork(&currentContact).SendPingMessage(&contact)
 	if ip.String() != defaultIp && !success {
 		fmt.Println("Our IP address is", ip.String())
 		panic("Couldn't connect to p2p network")
 	}
 	if success {
+		fmt.Println("Random port")
 		rand.Seed(time.Now().UnixNano())
 		// random port number
 		port = rand.Intn(65535-1024) + 1024
 	}
-	currentContact, network = createCurrentContact(ip, port)
-	go network.Listen(ip.String(), port)
+	currentContact, kademlia := createCurrentContact(ip, port)
+	go kademlia.Network.Listen(ip.String(), port, kademlia)
 	// go network.SendFindContactMessage(&currentContact)
 	// go network.SendPingMessage(&contact)
-	go network.SendFindContactMessage(&contact, currentContact.ID)
+	kademlia.Network.SendFindContactMessage(&contact, currentContact.ID)
 	// network.SendStoreMessage([]byte("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"), &contact)
 	// hash := NewKademliaID("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
 	// network.SendFindDataMessage(hash, &contact)
 	fmt.Println("Current contact main", currentContact)
-	i := 0
+	go cli.Init(shutdownNode, kademlia)
 	for {
-		fmt.Println(network.RoutingTable.FindClosestContacts(currentContact.ID, 1000))
-		network.Kademlia.DeleteOldData()
-		time.Sleep(1 * time.Second)
+		kademlia.DeleteOldData()
+		time.Sleep(15 * time.Second)
+		fmt.Println(kademlia.Network.RoutingTable.FindClosestContacts(currentContact.ID, 1000))
 		// network.SendFindDataMessage(hash, &contact)
-		i++
 	}
 }
 
-func createCurrentContact(ip net.IP, port int) (Contact, *Network) {
+func createCurrentContact(ip net.IP, port int) (Contact, *Kademlia) {
 	contact := NewContact(NewRandomKademliaID(), ip.String()+":"+strconv.Itoa(port))
-	network := NewNetwork(&contact)
-	return contact, network
+	kademlia := NewKademliaStruct(NewNetwork(&contact))
+	return contact, kademlia
 }
 
 // Get preferred outbound ip of this machine

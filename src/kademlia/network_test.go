@@ -19,8 +19,9 @@ func TestPingNode(t *testing.T) {
 	nodeID := NewRandomKademliaID()
 	contact := NewContact(nodeID, "127.0.0.1:8000")
 	network := NewNetwork(&contact)
+	kademlia := NewKademliaStruct(network)
 
-	go network.Listen("127.0.0.1", 8000)
+	go network.Listen("127.0.0.1", 8000, kademlia)
 
 	go network.SendPingMessage(&contact)
 
@@ -33,8 +34,9 @@ func TestFindNode(t *testing.T) {
 	nodeID := NewRandomKademliaID()
 	contact := NewContact(nodeID, "127.0.0.1:8000")
 	network := NewNetwork(&contact)
+	kademlia := NewKademliaStruct(network)
 
-	go network.Listen("127.0.0.1", 8000)
+	go network.Listen("127.0.0.1", 8000, kademlia)
 
 	go network.SendFindContactMessage(&contact, nodeID)
 
@@ -50,9 +52,11 @@ func TestStoreAndFind(t *testing.T) {
 	contact2 := NewContact(nodeID2, "127.0.0.1:8002")
 	network := NewNetwork(&contact)
 	network2 := NewNetwork(&contact2)
+	kademlia := NewKademliaStruct(network)
+	kademlia2 := NewKademliaStruct(network2)
 
-	go network.Listen("127.0.0.1", 8001)
-	go network2.Listen("127.0.0.1", 8002)
+	go network.Listen("127.0.0.1", 8001, kademlia)
+	go network2.Listen("127.0.0.1", 8002, kademlia2)
 
 	time.Sleep(1 * time.Millisecond)
 
@@ -60,18 +64,20 @@ func TestStoreAndFind(t *testing.T) {
 
 	time.Sleep(1 * time.Millisecond)
 
-	network.Kademlia.DeleteOldData()
+	kademlia.DeleteOldData()
 
 	hash := NewKademliaID("String")
 	res := network2.SendFindDataMessage(hash, &contact)
 	if res != "String" {
+		fmt.Println("Res is", res)
 		t.Fail()
 	}
 	time.Sleep(6 * time.Second)
-	network.Kademlia.DeleteOldData()
+	kademlia.DeleteOldData()
 	res2 := network2.SendFindDataMessage(hash, &contact)
 
 	if res2 == "String" {
+		fmt.Println("Res2 is", res)
 		t.Fail()
 	}
 
@@ -82,8 +88,9 @@ func TestFind(t *testing.T) {
 	nodeID := NewRandomKademliaID()
 	contact := NewContact(nodeID, "127.0.0.1:8000")
 	network := NewNetwork(&contact)
+	kademlia := NewKademliaStruct(network)
 
-	go network.Listen("127.0.0.1", 8000)
+	go network.Listen("127.0.0.1", 8000, kademlia)
 
 	time.Sleep(1 * time.Millisecond)
 
