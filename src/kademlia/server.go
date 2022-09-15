@@ -130,7 +130,21 @@ func getResponseMessage(message []byte, Network *Network, kademlia *Kademlia) []
 			panic(err)
 		}
 		return []byte("CONT" + string(body))
-
+	} else if resMessage[0] == newRefreshmessage().startMessage {
+		fmt.Println("RECEIVED REFRESH")
+		var hash *KademliaID
+		json.Unmarshal([]byte(resMessage[1]), &hash)
+		kademlia.RefreshTTL(*hash)
+		ex := extractContact([]byte(resMessage[2]), Network)
+		if ex != nil {
+			fmt.Println(ex)
+			return ex
+		}
+		body, err := json.Marshal(Network.CurrentNode)
+		if err != nil {
+			log.Println(err)
+		}
+		return body
 	} else {
 		return []byte("Error: Invalid RPC protocol")
 	}

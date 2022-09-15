@@ -159,7 +159,7 @@ func handleSendDataResponse(message []byte, network *Network) string {
 	}
 }
 
-func (network *Network) SendStoreMessage(data []byte, ttl time.Duration, contact *Contact) bool {
+func (network *Network) SendStoreMessage(data []byte, ttl time.Duration, contact *Contact, kademlia *Kademlia) bool {
 	conn, err3 := net.Dial("udp4", contact.Address)
 	if err3 != nil {
 		log.Println(err3)
@@ -168,6 +168,8 @@ func (network *Network) SendStoreMessage(data []byte, ttl time.Duration, contact
 	message := getStoreMessage(network, data, ttl)
 	conn.Write(message)
 	buffer := make([]byte, maxBytes)
+	hash := NewKademliaID(string(data))
+	kademlia.AddToKnown(contact, hash)
 	conn.SetReadDeadline(time.Now().Add(2 * time.Second))
 	n, err := conn.Read(buffer)
 	if err != nil {
@@ -193,6 +195,49 @@ func getStoreMessage(network *Network, data []byte, ttl time.Duration) []byte {
 }
 
 func handleStoreResponse(message []byte, network *Network) {
+	if string(message[:5]) == "Error" {
+		log.Println(string(message))
+		return
+	} else {
+		var contact *Contact
+		json.Unmarshal(message, &contact)
+		if VerifyContact(contact, network) {
+			network.RoutingTable.AddContact(*contact)
+		}
+	}
+}
+
+func (network *Network) SendRefreshMessage(hash *KademliaID, contact *Contact) bool {
+	conn, err3 := net.Dial("udp4", contact.Address)
+	if err3 != nil {
+		log.Println(err3)
+	}
+	defer conn.Close()
+	message := getRefreshMessage(network, hash)
+	conn.Write(message)
+	buffer := make([]byte, maxBytes)
+	conn.SetReadDeadline(time.Now().Add(2 * time.Second))
+	n, err := conn.Read(buffer)
+	if err != nil {
+		return false
+	}
+	// fmt.Println("\tResponse from server:", string(buffer[:n]))
+	handleRefreshResponse(buffer[:n], network)
+	return true
+}
+
+func getRefreshMessage(network *Network, hash *KademliaID) []byte {
+	body, err := json.Marshal(hash)
+	if err != nil {
+		log.Println(err)
+	}
+	startMessage := []byte(newRefreshmessage().startMessage + ";" + string(body) + ";")
+	body2 := network.marshalCurrentNode()
+	return append(startMessage, body2...)
+
+}
+
+func handleRefreshResponse(message []byte, network *Network) {
 	if string(message[:5]) == "Error" {
 		log.Println(string(message))
 		return

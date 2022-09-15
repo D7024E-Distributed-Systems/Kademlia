@@ -8,8 +8,9 @@ import (
 const alpha = 3
 
 type Kademlia struct {
-	m       map[KademliaID]Value
-	Network *Network
+	M            map[KademliaID]*Value
+	Network      *Network
+	KnownHolders map[Contact]KademliaID
 }
 
 type Value struct {
@@ -21,8 +22,9 @@ type Value struct {
 
 func NewKademliaStruct(network *Network) *Kademlia {
 	kademlia := &Kademlia{}
-	kademlia.m = make(map[KademliaID]Value)
+	kademlia.M = make(map[KademliaID]*Value)
 	kademlia.Network = network
+	kademlia.KnownHolders = make(map[Contact]KademliaID)
 	return kademlia
 }
 
@@ -67,7 +69,7 @@ func (kademlia *Kademlia) lookupContactHelper(target *KademliaID, previousContac
 
 // Checks if data is stored in this node, returns data if found
 func (kademlia *Kademlia) LookupData(hash KademliaID) []byte {
-	value, exists := kademlia.m[hash]
+	value, exists := kademlia.M[hash]
 	if exists {
 		value.deadAt = time.Now().Add(value.TTL)
 		return value.data
@@ -79,14 +81,26 @@ func (kademlia *Kademlia) LookupData(hash KademliaID) []byte {
 func (kademlia *Kademlia) Store(data []byte, ttl time.Duration) KademliaID {
 	hash := HashDataReturnKademliaID(string(data))
 	file := Value{data, 0, ttl, time.Now().Add(ttl)}
-	kademlia.m[*hash] = file
+	kademlia.M[*hash] = &file
 	return *hash
 }
 
 func (kademlia *Kademlia) DeleteOldData() {
-	for hash, value := range kademlia.m {
+	for hash, value := range kademlia.M {
 		if time.Now().After(value.deadAt) {
-			delete(kademlia.m, hash)
+			delete(kademlia.M, hash)
 		}
 	}
+}
+
+func (kademlia *Kademlia) RefreshTTL(hash KademliaID) {
+	value, exists := kademlia.M[hash]
+	if exists {
+		value.deadAt = time.Now().Add(value.TTL)
+	}
+}
+
+func (kademlia *Kademlia) AddToKnown(contact *Contact, hash *KademliaID) {
+	kademlia.KnownHolders[*contact] = *hash
+	fmt.Println("KNOWN ARE:", kademlia.KnownHolders)
 }

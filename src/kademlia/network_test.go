@@ -60,7 +60,7 @@ func TestStoreAndFind(t *testing.T) {
 
 	time.Sleep(1 * time.Millisecond)
 
-	network2.SendStoreMessage([]byte("String"), 5*time.Second, &contact)
+	network2.SendStoreMessage([]byte("String"), 5*time.Second, &contact, kademlia2)
 
 	time.Sleep(1 * time.Millisecond)
 
@@ -97,6 +97,45 @@ func TestFind(t *testing.T) {
 	go network.SendFindDataMessage(nodeID, &contact)
 
 	time.Sleep(1 * time.Millisecond)
+
+	return
+}
+
+func TestStoreAndFindAndRefresh(t *testing.T) {
+	nodeID := NewRandomKademliaID()
+	nodeID2 := NewRandomKademliaID()
+	contact := NewContact(nodeID, "127.0.0.1:8001")
+	contact2 := NewContact(nodeID2, "127.0.0.1:8002")
+	network := NewNetwork(&contact)
+	network2 := NewNetwork(&contact2)
+	kademlia := NewKademliaStruct(network)
+	kademlia2 := NewKademliaStruct(network2)
+
+	go network.Listen("127.0.0.1", 8001, kademlia)
+	go network2.Listen("127.0.0.1", 8002, kademlia2)
+
+	time.Sleep(1 * time.Millisecond)
+
+	network2.SendStoreMessage([]byte("String"), 5*time.Second, &contact, kademlia2)
+
+	time.Sleep(1 * time.Millisecond)
+
+	kademlia.DeleteOldData()
+
+	hash := NewKademliaID("String")
+	res := network2.SendFindDataMessage(hash, &contact)
+	if res != "String" {
+		t.Fail()
+	}
+
+	network2.SendRefreshMessage(hash, &contact)
+	time.Sleep(4 * time.Second)
+	kademlia.DeleteOldData()
+	res2 := network2.SendFindDataMessage(hash, &contact)
+
+	if res2 != "String" {
+		t.Fail()
+	}
 
 	return
 }
