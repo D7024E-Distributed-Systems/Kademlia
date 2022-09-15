@@ -229,8 +229,8 @@ func getRefreshMessage(network *Network, hash *KademliaID) []byte {
 		log.Println(err)
 	}
 	startMessage := []byte(newRefreshmessage().startMessage + ";" + string(body) + ";")
-	body3 := network.marshalCurrentNode()
-	return append(startMessage, body3...)
+	body2 := network.marshalCurrentNode()
+	return append(startMessage, body2...)
 
 }
 

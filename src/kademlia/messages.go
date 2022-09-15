@@ -5,6 +5,7 @@ package kademlia
  * find contact =FICO
  * find data = FIDA
  * store message = STME
+ * refresh message = REFR
  */
 
 type Ping struct {

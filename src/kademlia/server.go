@@ -61,6 +61,7 @@ func handleUDPConnection(conn *net.UDPConn, Network *Network) {
 
 func getResponseMessage(message []byte, Network *Network) []byte {
 	resMessage := strings.Split(string(message), ";")
+	fmt.Println("RECEIVED:", message)
 	if resMessage[0] == newPing().startMessage {
 		body, err := json.Marshal(Network.CurrentNode)
 		if err != nil {
@@ -131,6 +132,7 @@ func getResponseMessage(message []byte, Network *Network) []byte {
 		}
 		return []byte("CONT" + string(body))
 	} else if resMessage[0] == newRefreshmessage().startMessage {
+		fmt.Println("RECEIVED REFRESH")
 		var hash *KademliaID
 		json.Unmarshal([]byte(resMessage[1]), &hash)
 		Network.Kademlia.RefreshTTL(*hash)
