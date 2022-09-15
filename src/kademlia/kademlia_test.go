@@ -35,15 +35,15 @@ func TestCalcDistance(t *testing.T) {
 
 func TestInsertData(t *testing.T) {
 	kd := NewKademliaStruct()
-	if len(kd.m) != 0 {
-		fmt.Println(len(kd.m))
+	if len(kd.M) != 0 {
+		fmt.Println(len(kd.M))
 		t.Fail()
 	}
 
 	kd.Store([]byte("AA"), time.Minute)
 
-	if len(kd.m) != 1 {
-		fmt.Println(len(kd.m))
+	if len(kd.M) != 1 {
+		fmt.Println(len(kd.M))
 		t.Fail()
 	}
 }
@@ -75,7 +75,7 @@ func TestDeleteData(t *testing.T) {
 	time.Sleep(1 * time.Second)
 	kd.DeleteOldData()
 
-	if len(kd.m) != 0 {
+	if len(kd.M) != 0 {
 		t.Fail()
 	}
 }

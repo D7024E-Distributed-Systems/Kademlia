@@ -46,7 +46,7 @@ func main() {
 
 	// The target is just some random ID and default ip and port
 	target := NewRandomKademliaID()
-	contact := NewContact(target, defaultIp+":"+strconv.Itoa(port))
+	gatekeeper := NewContact(target, defaultIp+":"+strconv.Itoa(port))
 	// Our current contact, which is this node, will be some random ID and no address
 	currentContact := NewContact(NewRandomKademliaID(), "")
 	network := NewNetwork(&currentContact)
@@ -54,7 +54,7 @@ func main() {
 	// start our server on a random port number on our local network. Else we start ourself
 	// at default port.
 	ip := getOutboundIP()
-	success := network.SendPingMessage(&contact)
+	success := network.SendPingMessage(&gatekeeper)
 	if ip.String() != defaultIp && !success {
 		fmt.Println("Our IP address is", ip.String())
 		panic("Couldn't connect to p2p network")
@@ -65,20 +65,26 @@ func main() {
 		port = rand.Intn(65535-1024) + 1024
 	}
 	currentContact, network = createCurrentContact(ip, port)
+	if success {
+		network.SendStoreMessage([]byte("String"), 15*time.Second, &gatekeeper)
+	}
 	go network.Listen(ip.String(), port)
 	// go network.SendFindContactMessage(&currentContact)
 	// go network.SendPingMessage(&contact)
-	go network.SendFindContactMessage(&contact, currentContact.ID)
-	// network.SendStoreMessage([]byte("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"), &contact)
-	// hash := NewKademliaID("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-	// network.SendFindDataMessage(hash, &contact)
+	go network.SendFindContactMessage(&gatekeeper, currentContact.ID)
+	// hash := NewKademliaID("String")
 	fmt.Println("Current contact main", currentContact)
 	i := 0
 	for {
 		fmt.Println(network.RoutingTable.FindClosestContacts(currentContact.ID, 1000))
 		network.Kademlia.DeleteOldData()
-		time.Sleep(1 * time.Second)
-		// network.SendFindDataMessage(hash, &contact)
+		for contact, hash := range network.Kademlia.KnownHolders {
+			go network.SendRefreshMessage(&hash, &contact)
+		}
+		// network.SendStoreMessage([]byte("String"), time.Second, &gatekeeper)
+		time.Sleep(5 * time.Second)
+		// res := network.SendFindDataMessage(hash, &gatekeeper)
+		// fmt.Println("THE SAVED VALUE IS:", res)
 		i++
 	}
 }

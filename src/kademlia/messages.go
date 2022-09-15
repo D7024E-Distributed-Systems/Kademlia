@@ -5,6 +5,7 @@ package kademlia
  * find contact =FICO
  * find data = FIDA
  * store message = STME
+ * refresh message = REFR
  */
 
 type Ping struct {
@@ -37,4 +38,12 @@ type StoreMessage struct {
 
 func newStoreMessage() *StoreMessage {
 	return &StoreMessage{"STME"}
+}
+
+type RefreshMessage struct {
+	startMessage string
+}
+
+func newRefreshmessage() *RefreshMessage {
+	return &RefreshMessage{"REFR"}
 }
