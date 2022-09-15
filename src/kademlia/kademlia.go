@@ -29,7 +29,11 @@ func NewKademliaStruct(network *Network) *Kademlia {
 }
 
 func (kademlia *Kademlia) LookupContact(target *KademliaID) *Contact {
+	if target.Equals(kademlia.Network.RoutingTable.me.ID) {
+		return &kademlia.Network.RoutingTable.me
+	}
 	contacts := kademlia.Network.RoutingTable.FindClosestContacts(target, alpha)
+	fmt.Println("Find closest contacts: ", contacts)
 	for _, contact := range contacts {
 		if target.Equals(contact.ID) {
 			return &contact
@@ -40,20 +44,26 @@ func (kademlia *Kademlia) LookupContact(target *KademliaID) *Contact {
 
 func (kademlia *Kademlia) lookupContactHelper(target *KademliaID, previousContacts []Contact) *Contact {
 	routingTable := NewRoutingTable(*kademlia.Network.CurrentNode)
+	fmt.Println("previousContacts: ", previousContacts)
+	fmt.Println("previousContacts len: ", len(previousContacts))
 	for _, contact := range previousContacts {
+		// routingTable.AddContact(contact)
+		fmt.Println("Sending find contact message to contact:", contact)
 		fetchedContacts := kademlia.Network.SendFindContactMessage(&contact, target)
+		fmt.Println("Found contacts from fetchedContacts", fetchedContacts)
 		for _, tempContact := range fetchedContacts {
 			if target.Equals(tempContact.ID) {
 				return &tempContact
 			}
-			routingTable.AddContact(contact)
+			routingTable.AddContact(tempContact)
 		}
 	}
 	closestContacts := routingTable.FindClosestContacts(target, alpha)
+	fmt.Println("Closest contacts: ", closestContacts)
 	howManyContactsKnown := 0
 	for _, contact := range closestContacts {
 		for _, prevContact := range previousContacts {
-			if contact.ID == prevContact.ID {
+			if contact.ID.Equals(prevContact.ID) {
 				howManyContactsKnown++
 				break
 			}

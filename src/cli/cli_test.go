@@ -94,3 +94,20 @@ func TestDoExit(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestFindContact(t *testing.T) {
+	findContact(func() string {
+		return "A000000000000000000000000000000000000000"
+	}, func(kad *kademlia.KademliaID) *kademlia.Contact {
+		res := kademlia.NewContact(kad, "localhost")
+		return &res
+	})
+}
+
+func TestFindContactNil(t *testing.T) {
+	findContact(func() string {
+		return "test"
+	}, func(kad *kademlia.KademliaID) *kademlia.Contact {
+		return nil
+	})
+}

@@ -22,7 +22,7 @@ func do(readInput func() string, shutdownNode func(), kademlia *kademlia.Kademli
 				return
 			}
 		} else if stringsEqual(input, "find contact") {
-			findContact(readInput, input, kademlia)
+			findContact(readInput, kademlia.LookupContact)
 		} else if stringsEqual(input, "help") {
 			printHelp()
 		} else {
@@ -47,9 +47,14 @@ func printHelp() {
 	fmt.Println("\texit - shuts down the current node and all data will be lost.")
 }
 
-func findContact(readInput func() string, input string, kad *kademlia.Kademlia) {
+func findContact(readInput func() string, lookupContact func(*kademlia.KademliaID) *kademlia.Contact) {
 	str := readInput()
-	contact := kad.LookupContact(kademlia.NewKademliaID(str))
+	id := kademlia.NewKademliaID(str)
+	if id == nil {
+		fmt.Println("Invalid kademlia ID")
+		return
+	}
+	contact := lookupContact(id)
 	fmt.Println("Found contact", contact, "from searching in CLI")
 }
 
