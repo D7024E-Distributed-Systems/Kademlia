@@ -114,6 +114,17 @@ func TestContactCandidates(t *testing.T) {
 	contactCan.Swap(0, 1)
 }
 
+func TestDistanceBucket(t *testing.T) {
+	nodeId := NewKademliaID("A000000000000000000000000000000000000000")
+	me := NewContact(nodeId, "")
+	contact := NewContact(nodeId, "")
+	rt := NewRoutingTable(me)
+	rt.AddContact(contact)
+	if !rt.FindClosestContacts(contact.ID, 1)[0].distance.Equals(NewKademliaID("0000000000000000000000000000000000000000")) {
+		t.Fail()
+	}
+}
+
 func TestFindContact(t *testing.T) {
 	kademliaNodes := returnKademliaNodes()
 	res := kademliaNodes[3].LookupContact(kademliaNodes[0].Network.CurrentNode.ID)
@@ -140,7 +151,8 @@ func TestFindContact3(t *testing.T) {
 
 func TestFindContact4(t *testing.T) {
 	kademliaNodes := returnKademliaNodes()
-	res := kademliaNodes[3].LookupContact(kademliaNodes[3].Network.CurrentNode.ID)
+	kadId := NewKademliaID(kademliaNodes[3].Network.CurrentNode.ID.String())
+	res := kademliaNodes[3].LookupContact(kadId)
 	if res == nil || !res[0].ID.Equals(kademliaNodes[3].Network.CurrentNode.ID) {
 		t.Fail()
 	}
