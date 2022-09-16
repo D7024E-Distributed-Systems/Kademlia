@@ -28,21 +28,25 @@ func NewKademliaStruct(network *Network) *Kademlia {
 	return kademlia
 }
 
-func (kademlia *Kademlia) LookupContact(target *KademliaID) *Contact {
-	if target.Equals(kademlia.Network.RoutingTable.me.ID) {
-		return &kademlia.Network.RoutingTable.me
-	}
-	contacts := kademlia.Network.RoutingTable.FindClosestContacts(target, alpha)
+func (kademlia *Kademlia) LookupContact(target *KademliaID) []Contact {
+	var contact Contact
+
+	contacts := kademlia.Network.RoutingTable.FindClosestContacts(target, BucketSize)
 	fmt.Println("Find closest contacts: ", contacts)
-	for _, contact := range contacts {
-		if target.Equals(contact.ID) {
-			return &contact
-		}
+	// for _, contact := range contacts {
+	// 	if target.Equals(contact.ID) {
+	// 		return &contact
+	// 	}
+	// }
+	allContacts := kademlia.lookupContactHelper(target, contacts)
+	if target.Equals(kademlia.Network.RoutingTable.me.ID) {
+		contact = kademlia.Network.RoutingTable.me
+		return append([]Contact{contact}, allContacts...)
 	}
-	return kademlia.lookupContactHelper(target, contacts)
+	return allContacts
 }
 
-func (kademlia *Kademlia) lookupContactHelper(target *KademliaID, previousContacts []Contact) *Contact {
+func (kademlia *Kademlia) lookupContactHelper(target *KademliaID, previousContacts []Contact) []Contact {
 	routingTable := NewRoutingTable(*kademlia.Network.CurrentNode)
 	fmt.Println("previousContacts: ", previousContacts)
 	fmt.Println("previousContacts len: ", len(previousContacts))
@@ -52,9 +56,9 @@ func (kademlia *Kademlia) lookupContactHelper(target *KademliaID, previousContac
 		fetchedContacts := kademlia.Network.SendFindContactMessage(&contact, target)
 		fmt.Println("Found contacts from fetchedContacts", fetchedContacts)
 		for _, tempContact := range fetchedContacts {
-			if target.Equals(tempContact.ID) {
-				return &tempContact
-			}
+			// if target.Equals(tempContact.ID) {
+			// 	return &tempContact
+			// }
 			routingTable.AddContact(tempContact)
 		}
 	}
@@ -71,7 +75,7 @@ func (kademlia *Kademlia) lookupContactHelper(target *KademliaID, previousContac
 	}
 	if howManyContactsKnown == len(closestContacts) {
 		fmt.Println("Exiting find contact since we have gotten to n = n-1")
-		return nil
+		return closestContacts
 	} else {
 		return kademlia.lookupContactHelper(target, closestContacts)
 	}

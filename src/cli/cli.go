@@ -45,9 +45,10 @@ func shouldExit(readInput func() string) bool {
 func printHelp() {
 	fmt.Println("Available commands:")
 	fmt.Println("\texit - shuts down the current node and all data will be lost.")
+	fmt.Println("\tfind contact - finds the k closest contacts to a given node.")
 }
 
-func findContact(readInput func() string, lookupContact func(*kademlia.KademliaID) *kademlia.Contact) {
+func findContact(readInput func() string, lookupContact func(*kademlia.KademliaID) []kademlia.Contact) {
 	str := readInput()
 	id := kademlia.NewKademliaID(str)
 	if id == nil {

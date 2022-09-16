@@ -117,7 +117,7 @@ func TestContactCandidates(t *testing.T) {
 func TestFindContact(t *testing.T) {
 	kademliaNodes := returnKademliaNodes()
 	res := kademliaNodes[3].LookupContact(kademliaNodes[0].Network.CurrentNode.ID)
-	if res == nil || !res.ID.Equals(kademliaNodes[0].Network.CurrentNode.ID) {
+	if res == nil || !res[0].ID.Equals(kademliaNodes[0].Network.CurrentNode.ID) {
 		t.Fail()
 	}
 }
@@ -125,7 +125,7 @@ func TestFindContact(t *testing.T) {
 func TestFindContact2(t *testing.T) {
 	kademliaNodes := returnKademliaNodes()
 	res := kademliaNodes[3].LookupContact(kademliaNodes[1].Network.CurrentNode.ID)
-	if res == nil || !res.ID.Equals(kademliaNodes[1].Network.CurrentNode.ID) {
+	if res == nil || !res[0].ID.Equals(kademliaNodes[1].Network.CurrentNode.ID) {
 		t.Fail()
 	}
 }
@@ -133,7 +133,7 @@ func TestFindContact2(t *testing.T) {
 func TestFindContact3(t *testing.T) {
 	kademliaNodes := returnKademliaNodes()
 	res := kademliaNodes[3].LookupContact(kademliaNodes[2].Network.CurrentNode.ID)
-	if res == nil || !res.ID.Equals(kademliaNodes[2].Network.CurrentNode.ID) {
+	if res == nil || !res[0].ID.Equals(kademliaNodes[2].Network.CurrentNode.ID) {
 		t.Fail()
 	}
 }
@@ -141,17 +141,18 @@ func TestFindContact3(t *testing.T) {
 func TestFindContact4(t *testing.T) {
 	kademliaNodes := returnKademliaNodes()
 	res := kademliaNodes[3].LookupContact(kademliaNodes[3].Network.CurrentNode.ID)
-	if res == nil || !res.ID.Equals(kademliaNodes[3].Network.CurrentNode.ID) {
+	if res == nil || !res[0].ID.Equals(kademliaNodes[3].Network.CurrentNode.ID) {
 		t.Fail()
 	}
 }
-func TestFindContactWrongId(t *testing.T) {
-	kademliaNodes := returnKademliaNodes()
-	res := kademliaNodes[3].LookupContact(NewRandomKademliaID())
-	if res != nil {
-		t.Fail()
-	}
-}
+
+// func TestFindContactWrongId(t *testing.T) {
+// 	kademliaNodes := returnKademliaNodes()
+// 	res := kademliaNodes[3].LookupContact(NewRandomKademliaID())
+// 	if res != nil {
+// 		t.Fail()
+// 	}
+// }
 
 func returnKademliaNodes() []*Kademlia {
 	nodeID := NewKademliaID("A000000000000000000000000000000000000000")
