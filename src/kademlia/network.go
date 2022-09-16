@@ -55,7 +55,7 @@ func handlePingResponse(message []byte, network *Network) {
 	// fmt.Println("ping response: ", network.routingTable)
 }
 
-func (network *Network) SendFindContactMessage(contact *Contact, nodeID *KademliaID) bool {
+func (network *Network) SendFindContactMessage(contact *Contact, nodeID *KademliaID) []Contact {
 	conn, err3 := net.Dial("udp4", contact.Address)
 	if err3 != nil {
 		log.Println(err3)
@@ -67,11 +67,10 @@ func (network *Network) SendFindContactMessage(contact *Contact, nodeID *Kademli
 	conn.SetReadDeadline(time.Now().Add(2 * time.Second))
 	n, err := conn.Read(buffer)
 	if err != nil {
-		return false
+		return nil
 	}
 	// fmt.Println("\tResponse from server:", string(buffer[:n]))
-	handleFindContactResponse(buffer[:n], network)
-	return true
+	return handleFindContactResponse(buffer[:n], network)
 }
 
 func getFindContactMessage(network *Network, nodeID *KademliaID) []byte {
@@ -85,18 +84,22 @@ func getFindContactMessage(network *Network, nodeID *KademliaID) []byte {
 
 }
 
-func handleFindContactResponse(message []byte, network *Network) {
+func handleFindContactResponse(message []byte, network *Network) []Contact {
 	if string(message[:5]) == "Error" {
 		log.Println(string(message))
-		return
+		return nil
 	} else {
 		var contacts []Contact
+		var verifiedContacts []Contact
 		json.Unmarshal(message, &contacts)
 		for _, contact := range contacts {
 			if VerifyContact(&contact, network) {
-				network.SendPingMessage(&contact)
+				if network.SendPingMessage(&contact) {
+					verifiedContacts = append(verifiedContacts, contact)
+				}
 			}
 		}
+		return verifiedContacts
 	}
 }
 
@@ -156,7 +159,7 @@ func handleSendDataResponse(message []byte, network *Network) string {
 	}
 }
 
-func (network *Network) SendStoreMessage(data []byte, ttl time.Duration, contact *Contact) bool {
+func (network *Network) SendStoreMessage(data []byte, ttl time.Duration, contact *Contact, kademlia *Kademlia) bool {
 	conn, err3 := net.Dial("udp4", contact.Address)
 	if err3 != nil {
 		log.Println(err3)
@@ -165,8 +168,8 @@ func (network *Network) SendStoreMessage(data []byte, ttl time.Duration, contact
 	message := getStoreMessage(network, data, ttl)
 	conn.Write(message)
 	buffer := make([]byte, maxBytes)
-	hash := NewKademliaID(string(data))
-	network.Kademlia.AddToKnown(contact, hash)
+	hash := HashDataReturnKademliaID(string(data))
+	kademlia.AddToKnown(contact, hash)
 	conn.SetReadDeadline(time.Now().Add(2 * time.Second))
 	n, err := conn.Read(buffer)
 	if err != nil {
