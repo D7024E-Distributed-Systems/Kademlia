@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/D7024E-Distributed-Systems/Kademlia/src/cli"
 	. "github.com/D7024E-Distributed-Systems/Kademlia/src/kademlia"
 )
 
@@ -18,7 +17,6 @@ func main() {
 	port := 3000
 	// defaultIp := "130.240.156.194"
 	defaultIp := "173.19.0.2"
-	cli.Init(shutdownNode)
 
 	/** //! UNCOMMENT THIS WHEN WE WANT TO GO TO PRODUCTION
 	ip := getOutboundIP()

@@ -6,6 +6,11 @@ import (
 	"time"
 )
 
+// To run tests:
+// go test -coverprofile cover.out =./... ./...
+// To see coverage:
+// go tool cover -html=cover.out
+
 func TestNetworkStruct(t *testing.T) {
 	nodeID := NewRandomKademliaID()
 	contact := NewContact(nodeID, "127.0.0.1:3000")

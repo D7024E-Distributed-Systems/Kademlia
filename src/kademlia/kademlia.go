@@ -1,14 +1,13 @@
 package kademlia
 
 import (
-	"fmt"
 	"time"
 )
 
 const alpha = 3
 
 type Kademlia struct {
-	M            map[KademliaID]*Value
+	m            map[KademliaID]*Value
 	KnownHolders map[Contact]KademliaID
 }
 
@@ -21,7 +20,7 @@ type Value struct {
 
 func NewKademliaStruct() *Kademlia {
 	kademlia := &Kademlia{}
-	kademlia.M = make(map[KademliaID]*Value)
+	kademlia.m = make(map[KademliaID]*Value)
 	kademlia.KnownHolders = make(map[Contact]KademliaID)
 	return kademlia
 }
@@ -32,7 +31,7 @@ func (kademlia *Kademlia) LookupContact(target *Contact) {
 
 // Checks if data is stored in this node, returns data if found
 func (kademlia *Kademlia) LookupData(hash KademliaID) []byte {
-	value, exists := kademlia.M[hash]
+	value, exists := kademlia.m[hash]
 	if exists {
 		value.deadAt = time.Now().Add(value.TTL)
 		return value.data
@@ -44,20 +43,20 @@ func (kademlia *Kademlia) LookupData(hash KademliaID) []byte {
 func (kademlia *Kademlia) Store(data []byte, ttl time.Duration) KademliaID {
 	hash := NewKademliaID(string(data))
 	file := Value{data, 0, ttl, time.Now().Add(ttl)}
-	kademlia.M[*hash] = &file
+	kademlia.m[*hash] = &file
 	return *hash
 }
 
 func (kademlia *Kademlia) DeleteOldData() {
-	for hash, value := range kademlia.M {
+	for hash, value := range kademlia.m {
 		if time.Now().After(value.deadAt) {
-			delete(kademlia.M, hash)
+			delete(kademlia.m, hash)
 		}
 	}
 }
 
 func (kademlia *Kademlia) RefreshTTL(hash KademliaID) {
-	value, exists := kademlia.M[hash]
+	value, exists := kademlia.m[hash]
 	if exists {
 		value.deadAt = time.Now().Add(value.TTL)
 	}
@@ -65,5 +64,15 @@ func (kademlia *Kademlia) RefreshTTL(hash KademliaID) {
 
 func (kademlia *Kademlia) AddToKnown(contact *Contact, hash *KademliaID) {
 	kademlia.KnownHolders[*contact] = *hash
-	fmt.Println("KNOWN ARE:", kademlia.KnownHolders)
+}
+
+func (kademlia *Kademlia) RemoveFromKnown(value string) bool {
+	kademliaID := NewKademliaID(value)
+	for contact, data := range kademlia.KnownHolders {
+		if data == *kademliaID {
+			delete(kademlia.KnownHolders, contact)
+			return true
+		}
+	}
+	return false
 }
