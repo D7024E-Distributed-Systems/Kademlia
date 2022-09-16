@@ -9,7 +9,7 @@ const alpha = 3
 
 type Kademlia struct {
 	M            map[KademliaID]*Value
-	KnownHolders map[Contact]KademliaID
+	KnownHolders map[KademliaID]Contact
 }
 
 type Value struct {
@@ -22,7 +22,7 @@ type Value struct {
 func NewKademliaStruct() *Kademlia {
 	kademlia := &Kademlia{}
 	kademlia.M = make(map[KademliaID]*Value)
-	kademlia.KnownHolders = make(map[Contact]KademliaID)
+	kademlia.KnownHolders = make(map[KademliaID]Contact)
 	return kademlia
 }
 
@@ -50,6 +50,7 @@ func (kademlia *Kademlia) Store(data []byte, ttl time.Duration) KademliaID {
 
 func (kademlia *Kademlia) DeleteOldData() {
 	for hash, value := range kademlia.M {
+		fmt.Println("DEAD IS", value.deadAt)
 		if time.Now().After(value.deadAt) {
 			delete(kademlia.M, hash)
 		}
@@ -64,6 +65,6 @@ func (kademlia *Kademlia) RefreshTTL(hash KademliaID) {
 }
 
 func (kademlia *Kademlia) AddToKnown(contact *Contact, hash *KademliaID) {
-	kademlia.KnownHolders[*contact] = *hash
+	kademlia.KnownHolders[*hash] = *contact
 	fmt.Println("KNOWN ARE:", kademlia.KnownHolders)
 }

@@ -3,6 +3,7 @@ package kademlia
 import (
 	"crypto/sha1"
 	"encoding/hex"
+	"fmt"
 	"math/rand"
 	"time"
 )
@@ -68,4 +69,15 @@ func (kademliaID KademliaID) CalcDistance(target *KademliaID) *KademliaID {
 // String returns a simple string representation of a KademliaID
 func (kademliaID *KademliaID) String() string {
 	return hex.EncodeToString(kademliaID[0:IDLength])
+}
+
+func ToKademliaID(bar string) KademliaID {
+	res, err := hex.DecodeString(bar)
+	if err != nil {
+		fmt.Println("FAILED TO DECODE KADEMLIA ID")
+		return KademliaID{}
+	} else {
+		return *(*KademliaID)(res)
+	}
+	// return *(*KademliaID)(bar)
 }

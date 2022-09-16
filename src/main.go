@@ -9,16 +9,18 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/D7024E-Distributed-Systems/Kademlia/src/cli"
 	. "github.com/D7024E-Distributed-Systems/Kademlia/src/kademlia"
+	. "github.com/D7024E-Distributed-Systems/Kademlia/src/rest"
 )
 
 func main() {
 	// Default ip and port for first connection to Kademlia network
+
 	port := 3000
+	restPort := 3001
 	// defaultIp := "130.240.156.194"
 	defaultIp := "173.19.0.2"
-	cli.Init(shutdownNode)
+	// cli.Init(shutdownNode)
 
 	/** //! UNCOMMENT THIS WHEN WE WANT TO GO TO PRODUCTION
 	ip := getOutboundIP()
@@ -63,6 +65,9 @@ func main() {
 		rand.Seed(time.Now().UnixNano())
 		// random port number
 		port = rand.Intn(65535-1024) + 1024
+		rand.Seed(time.Now().UnixNano())
+
+		restPort = rand.Intn(65535-1024) + 1024
 	}
 	currentContact, network = createCurrentContact(ip, port)
 	if success {
@@ -74,11 +79,12 @@ func main() {
 	go network.SendFindContactMessage(&gatekeeper, currentContact.ID)
 	// hash := NewKademliaID("String")
 	fmt.Println("Current contact main", currentContact)
+	go GetRoute(ip.String(), restPort, network.Kademlia)
 	i := 0
 	for {
 		fmt.Println(network.RoutingTable.FindClosestContacts(currentContact.ID, 1000))
 		network.Kademlia.DeleteOldData()
-		for contact, hash := range network.Kademlia.KnownHolders {
+		for hash, contact := range network.Kademlia.KnownHolders {
 			go network.SendRefreshMessage(&hash, &contact)
 		}
 		// network.SendStoreMessage([]byte("String"), time.Second, &gatekeeper)
