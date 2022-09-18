@@ -11,15 +11,9 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// func YourHandler(w http.ResponseWriter, r *http.Request, kademlia *Kademlia) {
-// 	res := mux.Vars(r)
-// 	restFul.kademlia.LookupData(res["hash"])
-// 	fmt.Println(res["hash"])
-// }
-
 type data struct {
 	Value string
-	ttl   time.Duration
+	TTL   string
 }
 
 func GetRoute(ip string, port int, kademlia *Kademlia) {
@@ -31,16 +25,17 @@ func GetRoute(ip string, port int, kademlia *Kademlia) {
 		str := mux.Vars(r)
 		newKademliaID := ToKademliaID((str["hash"]))
 		message := kademlia.LookupData(newKademliaID)
+		fmt.Println("MESSAGE IS", message)
 		if message == nil {
+			fmt.Println("NO SUCH VALUE FOUND ON ID", newKademliaID.String())
 			w.WriteHeader(400)
 			w.Write([]byte("NO SUCH VALUE FOUND"))
-
-		} else {
-			fmt.Println("FOUND", string(message))
-			w.WriteHeader(200)
-			w.Write([]byte("FOUND "))
-			w.Write(message)
+			return
 		}
+		fmt.Println("FOUND", string(message))
+		w.WriteHeader(200)
+		w.Write([]byte("FOUND "))
+		w.Write(message)
 	}).Methods("GET")
 	r.HandleFunc("/object", func(w http.ResponseWriter, r *http.Request) {
 		var data data
@@ -50,11 +45,17 @@ func GetRoute(ip string, port int, kademlia *Kademlia) {
 			return
 		}
 
-		id := kademlia.Store([]byte(data.Value), data.ttl)
+		ttl, err := time.ParseDuration(data.TTL)
+		if err != nil {
+			w.WriteHeader(400)
+			w.Write([]byte("FAILED TO PARSE TTL"))
+			return
+		}
+		id, deadAt := kademlia.Store([]byte(data.Value), ttl)
 		fmt.Println("STORED", id)
 		w.WriteHeader(201)
-		w.Write([]byte("CREATED "))
-		w.Write([]byte(id.String()))
+		w.Write([]byte("Created data " + data.Value + " which will die at " + deadAt.String() + "\n"))
+		w.Write([]byte("Location: " + address + "/objects/" + id.String()))
 
 	}).Methods("POST")
 	// Bind to a port and pass our router in

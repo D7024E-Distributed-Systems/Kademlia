@@ -55,7 +55,7 @@ func TestLookupData(t *testing.T) {
 	kd := NewKademliaStruct(NewNetwork(&contact))
 	token := []byte("AA")
 	fmt.Println(token)
-	hash := kd.Store(token, time.Minute)
+	hash, _ := kd.Store(token, time.Minute)
 	response := kd.LookupData(hash)
 	if response == nil {
 		t.Fail()
@@ -153,18 +153,11 @@ func TestFindContact4(t *testing.T) {
 	kademliaNodes := returnKademliaNodes()
 	kadId := NewKademliaID(kademliaNodes[3].Network.CurrentNode.ID.String())
 	res := kademliaNodes[3].LookupContact(kadId)
+	fmt.Println(res, kademliaNodes[3].Network.CurrentNode.ID)
 	if res == nil || !res[0].ID.Equals(kademliaNodes[3].Network.CurrentNode.ID) {
 		t.Fail()
 	}
 }
-
-// func TestFindContactWrongId(t *testing.T) {
-// 	kademliaNodes := returnKademliaNodes()
-// 	res := kademliaNodes[3].LookupContact(NewRandomKademliaID())
-// 	if res != nil {
-// 		t.Fail()
-// 	}
-// }
 
 func returnKademliaNodes() []*Kademlia {
 	nodeID := NewKademliaID("A000000000000000000000000000000000000000")

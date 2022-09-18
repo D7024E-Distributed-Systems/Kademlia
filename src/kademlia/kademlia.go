@@ -14,10 +14,10 @@ type Kademlia struct {
 }
 
 type Value struct {
-	data               []byte
+	Data               []byte
 	timeSinceRepublish int
 	TTL                time.Duration
-	deadAt             time.Time
+	DeadAt             time.Time
 }
 
 func NewKademliaStruct(network *Network) *Kademlia {
@@ -33,7 +33,8 @@ func (kademlia *Kademlia) LookupContact(target *KademliaID) []Contact {
 	allContacts := kademlia.lookupContactHelper(target, contacts)
 	if target.Equals(kademlia.Network.RoutingTable.me.ID) {
 		contact := kademlia.Network.RoutingTable.me
-		return append(allContacts, contact)
+		contact.CalcDistance(kademlia.Network.CurrentNode.ID)
+		return append([]Contact{contact}, allContacts...)
 	}
 	return allContacts
 }
@@ -68,24 +69,24 @@ func (kademlia *Kademlia) lookupContactHelper(target *KademliaID, previousContac
 func (kademlia *Kademlia) LookupData(hash KademliaID) []byte {
 	value, exists := kademlia.M[hash]
 	if exists {
-		value.deadAt = time.Now().Add(value.TTL)
-		return value.data
+		value.DeadAt = time.Now().Add(value.TTL)
+		return value.Data
 	}
 	return nil
 }
 
 // Stores data in this node, returns hash of object
-func (kademlia *Kademlia) Store(data []byte, ttl time.Duration) KademliaID {
+func (kademlia *Kademlia) Store(data []byte, ttl time.Duration) (KademliaID, time.Time) {
 	hash := HashDataReturnKademliaID(string(data))
 	file := Value{data, 0, ttl, time.Now().Add(ttl)}
 	kademlia.M[*hash] = &file
-	return *hash
+	return *hash, file.DeadAt
 }
 
 func (kademlia *Kademlia) DeleteOldData() {
 	for hash, value := range kademlia.M {
-		fmt.Println("DEAD IS", value.deadAt)
-		if time.Now().After(value.deadAt) {
+		fmt.Println("DEAD IS", value.DeadAt)
+		if time.Now().After(value.DeadAt) {
 			delete(kademlia.M, hash)
 		}
 	}
@@ -94,7 +95,7 @@ func (kademlia *Kademlia) DeleteOldData() {
 func (kademlia *Kademlia) RefreshTTL(hash KademliaID) {
 	value, exists := kademlia.M[hash]
 	if exists {
-		value.deadAt = time.Now().Add(value.TTL)
+		value.DeadAt = time.Now().Add(value.TTL)
 	}
 }
 
