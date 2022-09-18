@@ -21,6 +21,8 @@ func do(readInput func() string, shutdownNode func(), kademlia *kademlia.Kademli
 				shutdownNode()
 				return
 			}
+		} else if stringsEqual(input, "find contact") {
+			findContact(readInput, kademlia.LookupContact)
 		} else if stringsEqual(input, "help") {
 			printHelp()
 		} else if stringsEqual(input, "forget") {
@@ -45,6 +47,18 @@ func shouldExit(readInput func() string) bool {
 func printHelp() {
 	fmt.Println("Available commands:")
 	fmt.Println("\texit - shuts down the current node and all data will be lost.")
+	fmt.Println("\tfind contact - finds the k closest contacts to a given node.")
+}
+
+func findContact(readInput func() string, lookupContact func(*kademlia.KademliaID) []kademlia.Contact) {
+	str := readInput()
+	id := kademlia.NewKademliaID(str)
+	if id == nil {
+		fmt.Println("Invalid kademlia ID")
+		return
+	}
+	contact := lookupContact(id)
+	fmt.Println("Found contact", contact, "from searching in CLI")
 }
 
 func forgetHelp(readInput func() string, removeFromKnown func(value string) bool) {
