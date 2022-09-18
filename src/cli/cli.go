@@ -5,13 +5,15 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/D7024E-Distributed-Systems/Kademlia/src/kademlia"
 )
 
-func Init(shutdownNode func()) {
-	go do(readLine, shutdownNode)
+func Init(shutdownNode func(), kademlia *kademlia.Kademlia) {
+	go do(readLine, shutdownNode, kademlia)
 }
 
-func do(readInput func() string, shutdownNode func()) {
+func do(readInput func() string, shutdownNode func(), kademlia *kademlia.Kademlia) {
 	for {
 		input := readInput()
 		if stringsEqual(input, "exit") {
@@ -19,6 +21,8 @@ func do(readInput func() string, shutdownNode func()) {
 				shutdownNode()
 				return
 			}
+		} else if stringsEqual(input, "find contact") {
+			findContact(readInput, kademlia.LookupContact)
 		} else if stringsEqual(input, "help") {
 			printHelp()
 		} else {
@@ -41,6 +45,18 @@ func shouldExit(readInput func() string) bool {
 func printHelp() {
 	fmt.Println("Available commands:")
 	fmt.Println("\texit - shuts down the current node and all data will be lost.")
+	fmt.Println("\tfind contact - finds the k closest contacts to a given node.")
+}
+
+func findContact(readInput func() string, lookupContact func(*kademlia.KademliaID) []kademlia.Contact) {
+	str := readInput()
+	id := kademlia.NewKademliaID(str)
+	if id == nil {
+		fmt.Println("Invalid kademlia ID")
+		return
+	}
+	contact := lookupContact(id)
+	fmt.Println("Found contact", contact, "from searching in CLI")
 }
 
 func stringsEqual(a, b string) bool {

@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func (Network *Network) Listen(ip string, port int) {
+func (Network *Network) Listen(ip string, port int, kademlia *Kademlia) {
 	addrStr := ip + ":" + strconv.Itoa(port)
 	addr, err := net.ResolveUDPAddr("udp4", addrStr)
 	if err != nil {
@@ -29,11 +29,11 @@ func (Network *Network) Listen(ip string, port int) {
 
 	for {
 		// wait for UDP client to connect
-		handleUDPConnection(ln, Network)
+		handleUDPConnection(ln, Network, kademlia)
 	}
 }
 
-func handleUDPConnection(conn *net.UDPConn, Network *Network) {
+func handleUDPConnection(conn *net.UDPConn, Network *Network, kademlia *Kademlia) {
 
 	// here is where you want to do stuff like read or write to client
 
@@ -46,7 +46,7 @@ func handleUDPConnection(conn *net.UDPConn, Network *Network) {
 
 	fmt.Println("\tReceived from UDP client :", string(buffer[:n]))
 
-	message := getResponseMessage(buffer[:n], Network)
+	message := getResponseMessage(buffer[:n], Network, kademlia)
 
 	// TODO: Call correct method depending on received message and reply
 
@@ -59,9 +59,8 @@ func handleUDPConnection(conn *net.UDPConn, Network *Network) {
 	}
 }
 
-func getResponseMessage(message []byte, Network *Network) []byte {
+func getResponseMessage(message []byte, Network *Network, kademlia *Kademlia) []byte {
 	resMessage := strings.Split(string(message), ";")
-	fmt.Println("RECEIVED:", message)
 	if resMessage[0] == newPing().startMessage {
 		body, err := json.Marshal(Network.CurrentNode)
 		if err != nil {
@@ -94,7 +93,7 @@ func getResponseMessage(message []byte, Network *Network) []byte {
 		json.Unmarshal([]byte(resMessage[1]), &data)
 		var ttl time.Duration
 		json.Unmarshal([]byte(resMessage[2]), &ttl)
-		Network.Kademlia.Store(*data, ttl)
+		kademlia.Store(*data, ttl)
 		ex := extractContact([]byte(resMessage[3]), Network)
 		if ex != nil {
 			fmt.Println(ex)
@@ -114,7 +113,7 @@ func getResponseMessage(message []byte, Network *Network) []byte {
 			fmt.Println(ex)
 			return ex
 		}
-		val := Network.Kademlia.LookupData(*hash)
+		val := kademlia.LookupData(*hash)
 		if val != nil {
 			body, err := json.Marshal(*Network.CurrentNode)
 			if err != nil {
@@ -135,7 +134,7 @@ func getResponseMessage(message []byte, Network *Network) []byte {
 		fmt.Println("RECEIVED REFRESH")
 		var hash *KademliaID
 		json.Unmarshal([]byte(resMessage[1]), &hash)
-		Network.Kademlia.RefreshTTL(*hash)
+		kademlia.RefreshTTL(*hash)
 		ex := extractContact([]byte(resMessage[2]), Network)
 		if ex != nil {
 			fmt.Println(ex)

@@ -3,6 +3,8 @@ package cli
 import (
 	"fmt"
 	"testing"
+
+	"github.com/D7024E-Distributed-Systems/Kademlia/src/kademlia"
 )
 
 type Read struct {
@@ -73,6 +75,7 @@ func TestPrintHelp(t *testing.T) {
 func TestDoExit(t *testing.T) {
 	Iter = 0
 	Done = false
+	contact := kademlia.NewContact(kademlia.NewRandomKademliaID(), "localhost")
 	do(func() string {
 		if Iter == 0 {
 			Iter++
@@ -85,8 +88,27 @@ func TestDoExit(t *testing.T) {
 		return ""
 	}, func() {
 		Done = true
-	})
+
+	}, kademlia.NewKademliaStruct(kademlia.NewNetwork(&contact)))
 	if !Done {
 		t.Fail()
 	}
+}
+
+func TestFindContact(t *testing.T) {
+	findContact(func() string {
+		return "A000000000000000000000000000000000000000"
+	}, func(kad *kademlia.KademliaID) []kademlia.Contact {
+		res := kademlia.NewContact(kad, "localhost")
+		res2 := kademlia.NewContact(kad, "localhost")
+		return []kademlia.Contact{res, res2}
+	})
+}
+
+func TestFindContactNil(t *testing.T) {
+	findContact(func() string {
+		return "test"
+	}, func(kad *kademlia.KademliaID) []kademlia.Contact {
+		return nil
+	})
 }
