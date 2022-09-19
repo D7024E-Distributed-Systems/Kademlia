@@ -251,10 +251,12 @@ func handleRefreshResponse(message []byte, network *Network) {
 }
 
 func (network *Network) marshalCurrentNode() []byte {
-	body, err := json.Marshal(network.CurrentNode)
-	if err != nil {
-		log.Println(err)
-		panic(err)
-	}
+	body, _ := json.Marshal(network.CurrentNode)
+	// Commented out because marshal cannot fail with what we send in.
+	// If it would fail here it would have failed earlier already.
+	// if err != nil {
+	// 	log.Println(err)
+	// 	panic(err)
+	// }
 	return body
 }

@@ -48,10 +48,6 @@ func handleUDPConnection(conn *net.UDPConn, Network *Network, kademlia *Kademlia
 
 	message := getResponseMessage(buffer[:n], Network, kademlia)
 
-	// TODO: Call correct method depending on received message and reply
-
-	// write message back to client
-	// message := []byte("Hello UDP client!")
 	_, err = conn.WriteToUDP(message, addr)
 
 	if err != nil {
@@ -62,11 +58,7 @@ func handleUDPConnection(conn *net.UDPConn, Network *Network, kademlia *Kademlia
 func getResponseMessage(message []byte, Network *Network, kademlia *Kademlia) []byte {
 	resMessage := strings.Split(string(message), ";")
 	if resMessage[0] == newPing().startMessage {
-		body, err := json.Marshal(Network.CurrentNode)
-		if err != nil {
-			log.Println(err)
-			panic(err)
-		}
+		body := Network.marshalCurrentNode()
 		ex := extractContact([]byte(resMessage[1]), Network)
 		if ex != nil {
 			return ex
@@ -82,11 +74,7 @@ func getResponseMessage(message []byte, Network *Network, kademlia *Kademlia) []
 		}
 		closestNodes := Network.RoutingTable.FindClosestContacts(id, BucketSize)
 		closestNodes = append(closestNodes, *Network.CurrentNode)
-		body, err := json.Marshal(closestNodes)
-		if err != nil {
-			log.Println(err)
-			panic(err)
-		}
+		body, _ := json.Marshal(closestNodes)
 		return body
 	} else if resMessage[0] == newStoreMessage().startMessage {
 		var data *[]byte
@@ -99,11 +87,7 @@ func getResponseMessage(message []byte, Network *Network, kademlia *Kademlia) []
 			fmt.Println(ex)
 			return ex
 		}
-		body, err := json.Marshal(Network.CurrentNode)
-		if err != nil {
-			log.Println(err)
-			panic(err)
-		}
+		body := Network.marshalCurrentNode()
 		return body
 	} else if resMessage[0] == newFindData().startMessage {
 		var hash *KademliaID
@@ -115,20 +99,12 @@ func getResponseMessage(message []byte, Network *Network, kademlia *Kademlia) []
 		}
 		val := kademlia.LookupData(*hash)
 		if val != nil {
-			body, err := json.Marshal(*Network.CurrentNode)
-			if err != nil {
-				log.Println(err)
-				panic(err)
-			}
+			body := Network.marshalCurrentNode()
 			return []byte("VALU;" + string(val) + ";" + string(body))
 		}
 		closestNodes := Network.RoutingTable.FindClosestContacts(hash, BucketSize)
 		closestNodes = append(closestNodes, *Network.CurrentNode)
-		body, err := json.Marshal(closestNodes)
-		if err != nil {
-			log.Println(err)
-			panic(err)
-		}
+		body, _ := json.Marshal(closestNodes)
 		return []byte("CONT" + string(body))
 	} else if resMessage[0] == newRefreshmessage().startMessage {
 		fmt.Println("RECEIVED REFRESH")
@@ -140,10 +116,7 @@ func getResponseMessage(message []byte, Network *Network, kademlia *Kademlia) []
 			fmt.Println(ex)
 			return ex
 		}
-		body, err := json.Marshal(Network.CurrentNode)
-		if err != nil {
-			log.Println(err)
-		}
+		body := Network.marshalCurrentNode()
 		return body
 	} else {
 		return []byte("Error: Invalid RPC protocol")
