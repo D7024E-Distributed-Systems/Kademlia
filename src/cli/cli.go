@@ -26,7 +26,7 @@ func do(readInput func() string, shutdownNode func(), kademlia *kademlia.Kademli
 		} else if stringsEqual(input, "help") {
 			printHelp()
 		} else if stringsEqual(input, "forget") {
-			forgetHelp(readInput, kademlia.RemoveFromKnown)
+			forgetHelp(kademlia, readInput, kademlia.RemoveFromKnown)
 		} else {
 			fmt.Println("Unknown command \"" + input + "\"")
 		}
@@ -61,10 +61,10 @@ func findContact(readInput func() string, lookupContact func(*kademlia.KademliaI
 	fmt.Println("Found contact", contact, "from searching in CLI")
 }
 
-func forgetHelp(readInput func() string, removeFromKnown func(value string) bool) {
+func forgetHelp(kademlia *kademlia.Kademlia, readInput func() string, removeFromKnown func(value string) bool) {
 	fmt.Println("Which value do you want to forget?")
 	text := readInput()
-	success := kademlia.NewKademliaStruct().RemoveFromKnown(text)
+	success := kademlia.RemoveFromKnown(text)
 	if success {
 		fmt.Println("Successfully forgot value: ", text)
 	} else {

@@ -8,7 +8,7 @@ import (
 const alpha = 3
 
 type Kademlia struct {
-	M            map[KademliaID]*Value
+	m            map[KademliaID]*Value
 	Network      *Network
 	KnownHolders map[Contact]KademliaID
 }
@@ -22,7 +22,7 @@ type Value struct {
 
 func NewKademliaStruct(network *Network) *Kademlia {
 	kademlia := &Kademlia{}
-	kademlia.M = make(map[KademliaID]*Value)
+	kademlia.m = make(map[KademliaID]*Value)
 	kademlia.Network = network
 	kademlia.KnownHolders = make(map[Contact]KademliaID)
 	return kademlia
@@ -31,11 +31,14 @@ func NewKademliaStruct(network *Network) *Kademlia {
 func (kademlia *Kademlia) LookupContact(target *KademliaID) []Contact {
 	contacts := kademlia.Network.RoutingTable.FindClosestContacts(target, BucketSize)
 	allContacts := kademlia.lookupContactHelper(target, contacts)
+	fmt.Println("TARGET", target, "MAYBE EQUAL TO", kademlia.Network.RoutingTable.me.ID)
 	if target.Equals(kademlia.Network.RoutingTable.me.ID) {
+		fmt.Println("IT'S ME")
 		contact := kademlia.Network.RoutingTable.me
 		contact.CalcDistance(kademlia.Network.CurrentNode.ID)
 		return append([]Contact{contact}, allContacts...)
 	}
+	fmt.Println("IT'S NOT ME")
 	return allContacts
 }
 
@@ -79,15 +82,15 @@ func (kademlia *Kademlia) LookupData(hash KademliaID) []byte {
 func (kademlia *Kademlia) Store(data []byte, ttl time.Duration) (KademliaID, time.Time) {
 	hash := HashDataReturnKademliaID(string(data))
 	file := Value{data, 0, ttl, time.Now().Add(ttl)}
-	kademlia.M[*hash] = &file
+	kademlia.m[*hash] = &file
 	return *hash, file.DeadAt
 }
 
 func (kademlia *Kademlia) DeleteOldData() {
-	for hash, value := range kademlia.M {
+	for hash, value := range kademlia.m {
 		fmt.Println("DEAD IS", value.DeadAt)
 		if time.Now().After(value.DeadAt) {
-			delete(kademlia.M, hash)
+			delete(kademlia.m, hash)
 		}
 	}
 }
@@ -104,9 +107,9 @@ func (kademlia *Kademlia) AddToKnown(contact *Contact, hash *KademliaID) {
 }
 
 func (kademlia *Kademlia) RemoveFromKnown(value string) bool {
-	kademliaID := NewKademliaID(value)
+	kademliaID := ToKademliaID(value)
 	for contact, data := range kademlia.KnownHolders {
-		if data == *kademliaID {
+		if data == kademliaID {
 			delete(kademlia.KnownHolders, contact)
 			return true
 		}
