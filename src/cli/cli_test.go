@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/D7024E-Distributed-Systems/Kademlia/src/kademlia"
+	. "github.com/D7024E-Distributed-Systems/Kademlia/src/kademlia"
 )
 
 type Read struct {
@@ -107,8 +108,37 @@ func TestFindContact(t *testing.T) {
 
 func TestFindContactNil(t *testing.T) {
 	findContact(func() string {
-		return "test"
+		return ""
 	}, func(kad *kademlia.KademliaID) []kademlia.Contact {
 		return nil
+	})
+}
+
+func TestForgetSuccess(t *testing.T) {
+	contact := NewContact(NewRandomKademliaID(), "localhost:3000")
+	network := NewNetwork(&contact)
+	kademlia := NewKademliaStruct(network)
+	kademlia.KnownHolders[contact] = ToKademliaID("A000000000000000000000000000000000000000")
+	forgetHelp(kademlia, func() string {
+		return "A000000000000000000000000000000000000000"
+	}, func(value string) bool {
+		if value == "A000000000000000000000000000000000000000" {
+			return true
+		}
+		return false
+	})
+}
+
+func TestForgetFail(t *testing.T) {
+	contact := NewContact(NewRandomKademliaID(), "localhost:3000")
+	kademlia := NewKademliaStruct(NewNetwork(&contact))
+	kademlia.KnownHolders[contact] = ToKademliaID("B000000000000000000000000000000000000000")
+	forgetHelp(kademlia, func() string {
+		return "A000000000000000000000000000000000000000"
+	}, func(value string) bool {
+		if value != "A000000000000000000000000000000000000000" {
+			return true
+		}
+		return false
 	})
 }

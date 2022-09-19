@@ -145,3 +145,53 @@ func TestStoreAndFindAndRefresh(t *testing.T) {
 
 	return
 }
+
+func TestListenFailure(t *testing.T) {
+	defer func() { recover() }()
+
+	nodeID := NewRandomKademliaID()
+	contact := NewContact(nodeID, "127.0.0.1:3000")
+	network := NewNetwork(&contact)
+	kademlia := NewKademliaStruct(network)
+
+	network.Listen("asdasd", 3, kademlia)
+
+	t.Errorf("did not panic")
+}
+
+func TestNonexistentRPC(t *testing.T) {
+	nodeID := NewRandomKademliaID()
+	contact := NewContact(nodeID, "127.0.0.1:3000")
+	network := NewNetwork(&contact)
+	kademlia := NewKademliaStruct(network)
+
+	res := getResponseMessage([]byte("NONE"), network, kademlia)
+
+	if string(res) != "Error: Invalid RPC protocol" {
+		t.Fail()
+	}
+}
+
+func TestRefreshResponseFailure(t *testing.T) {
+	nodeID := NewRandomKademliaID()
+	contact := NewContact(nodeID, "127.0.0.1:3000")
+	network := NewNetwork(&contact)
+
+	handleRefreshResponse([]byte("Error"), network)
+}
+
+func TestHandleStoreResponseFailure(t *testing.T) {
+	nodeID := NewRandomKademliaID()
+	contact := NewContact(nodeID, "127.0.0.1:3000")
+	network := NewNetwork(&contact)
+
+	handleStoreResponse([]byte("Error"), network)
+}
+
+func TestMarshalCurrentNodeFailure(t *testing.T) {
+	nodeID := NewRandomKademliaID()
+	contact := NewContact(nodeID, "")
+	network := NewNetwork(&contact)
+
+	network.marshalCurrentNode()
+}

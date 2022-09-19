@@ -53,10 +53,10 @@ func printHelp() {
 func findContact(readInput func() string, lookupContact func(*kademlia.KademliaID) []kademlia.Contact) {
 	str := readInput()
 	id := kademlia.NewKademliaID(str)
-	if id == nil {
-		fmt.Println("Invalid kademlia ID")
-		return
-	}
+	// if id == nil {
+	// 	fmt.Println("Invalid kademlia ID")
+	// 	return
+	// }
 	contact := lookupContact(id)
 	fmt.Println("Found contact", contact, "from searching in CLI")
 }

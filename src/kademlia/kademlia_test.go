@@ -15,6 +15,15 @@ func TestLessThan(t *testing.T) {
 	}
 }
 
+func TestLessThanEqual(t *testing.T) {
+	nodeID := NewKademliaID("AA")
+	nodeID2 := NewKademliaID("AA")
+	res := nodeID2.Less(nodeID)
+	if res {
+		t.Fail()
+	}
+}
+
 func TestEqual(t *testing.T) {
 	nodeID := NewKademliaID("A000000000000000000000000000000000000000")
 	nodeID2 := NewKademliaID("A000000000000000000000000000000000000000")
@@ -223,10 +232,40 @@ func TestKademliaIdNotLess(t *testing.T) {
 	}
 }
 
-func TestToKademliaID(t *testing.T) {
+func TestToKademliaIDSuccess(t *testing.T) {
 	id := NewKademliaID("Test")
 	expected := ToKademliaID(id.String())
 	if *id != expected {
+		t.Fail()
+	}
+}
+
+func TestToKademliaIDFailure(t *testing.T) {
+	actual := ToKademliaID("LL")
+	expected := KademliaID{}
+	if actual != expected {
+		t.Fail()
+	}
+}
+
+func TestRemoveFromKnownSuccess(t *testing.T) {
+	contact := NewContact(NewRandomKademliaID(), "localhost:3000")
+	kademlia := NewKademliaStruct(NewNetwork(&contact))
+	kademlia.KnownHolders[contact] = ToKademliaID("B000000000000000000000000000000000000000")
+	kademlia.RemoveFromKnown("B000000000000000000000000000000000000000")
+	fmt.Println(kademlia.KnownHolders)
+	if len(kademlia.KnownHolders) != 0 {
+		t.Fail()
+	}
+}
+
+func TestRemoveFromKnownFailure(t *testing.T) {
+	contact := NewContact(NewRandomKademliaID(), "localhost:3000")
+	kademlia := NewKademliaStruct(NewNetwork(&contact))
+	kademlia.KnownHolders[contact] = ToKademliaID("C000000000000000000000000000000000000000")
+	kademlia.RemoveFromKnown("B000000000000000000000000000000000000000")
+	fmt.Println(kademlia.KnownHolders)
+	if len(kademlia.KnownHolders) != 1 {
 		t.Fail()
 	}
 }
