@@ -107,6 +107,7 @@ func TestFind(t *testing.T) {
 }
 
 func TestStoreAndFindAndRefresh(t *testing.T) {
+	t.Parallel()
 	nodeID := NewRandomKademliaID()
 	time.Sleep(100 * time.Millisecond)
 	nodeID2 := NewRandomKademliaID()
