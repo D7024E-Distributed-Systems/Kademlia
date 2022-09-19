@@ -10,16 +10,23 @@ func TestLessThan(t *testing.T) {
 	nodeID := NewKademliaID("A000000000000000000000000000000000000000")
 	nodeID2 := NewKademliaID("B000000000000000000000000000000000000000")
 	res := nodeID.Less(nodeID2)
-	if res {
+	if !res {
 		t.Fail()
 	}
 }
 
 func TestLessThanEqual(t *testing.T) {
-	nodeID := NewKademliaID("AA")
-	nodeID2 := NewKademliaID("AA")
+	nodeID := NewKademliaID("A000000000000000000000000000000000000000")
+	nodeID2 := NewKademliaID("A000000000000000000000000000000000000000")
 	res := nodeID2.Less(nodeID)
 	if res {
+		t.Fail()
+	}
+}
+
+func TestKademliaId(t *testing.T) {
+	node := NewKademliaID("A000000000000000000000000000000000000000")
+	if node.String() != "a000000000000000000000000000000000000000" {
 		t.Fail()
 	}
 }
@@ -38,7 +45,7 @@ func TestCalcDistance(t *testing.T) {
 	nodeID2 := NewKademliaID("AAAAAAAAAAAAAAAAA00000000000000000000000")
 	res := nodeID.CalcDistance(nodeID2)
 	fmt.Println(res)
-	if res.String() != "05065a0254000c535d020604055a05045200550c" {
+	if res.String() != "0a0a0aaaaaaaaaaaa00000000000000000000000" {
 		t.Fail()
 	}
 }
@@ -97,10 +104,10 @@ func TestContacts(t *testing.T) {
 	contact := NewContact(NewKademliaID("A000000000000000000000000000000000000000"), "localhost")
 	contact2 := NewContact(NewKademliaID("B000000000000000000000000000000000000000"), "localhost")
 
-	if contact.String() != "contact(\"3766336661383330343961633938656663363462\", \"localhost\")" {
+	if contact.String() != "contact(\"a000000000000000000000000000000000000000\", \"localhost\")" {
 		t.Fail()
 	}
-	if contact2.String() != "contact(\"3234303561346639636336623337316637323666\", \"localhost\")" {
+	if contact2.String() != "contact(\"b000000000000000000000000000000000000000\", \"localhost\")" {
 
 		t.Fail()
 	}
@@ -233,7 +240,7 @@ func TestKademliaIdNotLess(t *testing.T) {
 }
 
 func TestToKademliaIDSuccess(t *testing.T) {
-	id := NewKademliaID("Test")
+	id := NewKademliaID("A000000000000000000000000000000000000000")
 	expected := ToKademliaID(id.String())
 	if *id != expected {
 		t.Fail()
