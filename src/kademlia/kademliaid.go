@@ -16,16 +16,12 @@ type KademliaID [IDLength]byte
 
 // NewKademliaID returns a new instance of a KademliaID based on the string input
 func NewKademliaID(data string) *KademliaID {
-	decoded, _ := hex.DecodeString(data)
-	if len(decoded) < IDLength {
-		return nil
-	}
-
+	hashbytes := sha1.Sum([]byte(data))
+	hash := hex.EncodeToString(hashbytes[0:IDLength])
 	newKademliaID := KademliaID{}
 	for i := 0; i < IDLength; i++ {
-		newKademliaID[i] = decoded[i]
+		newKademliaID[i] = hash[i]
 	}
-
 	return &newKademliaID
 }
 
@@ -90,7 +86,7 @@ func (kademliaID *KademliaID) String() string {
 func ToKademliaID(bar string) KademliaID {
 	res, err := hex.DecodeString(bar)
 	if err != nil {
-		fmt.Println("FAILED TO DECODE KADEMLIA ID")
+		fmt.Println("FAILED TO DECODE KADEMLIA ID", err)
 		return KademliaID{}
 	} else {
 		return *(*KademliaID)(res)

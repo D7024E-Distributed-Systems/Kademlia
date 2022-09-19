@@ -8,7 +8,7 @@ import (
 const alpha = 3
 
 type Kademlia struct {
-	M            map[KademliaID]*Value
+	m            map[KademliaID]*Value
 	Network      *Network
 	KnownHolders map[Contact]KademliaID
 }
@@ -22,7 +22,7 @@ type Value struct {
 
 func NewKademliaStruct(network *Network) *Kademlia {
 	kademlia := &Kademlia{}
-	kademlia.M = make(map[KademliaID]*Value)
+	kademlia.m = make(map[KademliaID]*Value)
 	kademlia.Network = network
 	kademlia.KnownHolders = make(map[Contact]KademliaID)
 	return kademlia
@@ -31,11 +31,14 @@ func NewKademliaStruct(network *Network) *Kademlia {
 func (kademlia *Kademlia) LookupContact(target *KademliaID) []Contact {
 	contacts := kademlia.Network.RoutingTable.FindClosestContacts(target, BucketSize)
 	allContacts := kademlia.lookupContactHelper(target, contacts)
+	fmt.Println("TARGET", target, "MAYBE EQUAL TO", kademlia.Network.RoutingTable.me.ID)
 	if target.Equals(kademlia.Network.RoutingTable.me.ID) {
+		fmt.Println("IT'S ME")
 		contact := kademlia.Network.RoutingTable.me
 		contact.CalcDistance(kademlia.Network.CurrentNode.ID)
 		return append([]Contact{contact}, allContacts...)
 	}
+	fmt.Println("IT'S NOT ME")
 	return allContacts
 }
 
@@ -67,7 +70,7 @@ func (kademlia *Kademlia) lookupContactHelper(target *KademliaID, previousContac
 
 // Checks if data is stored in this node, returns data if found
 func (kademlia *Kademlia) LookupData(hash KademliaID) []byte {
-	value, exists := kademlia.M[hash]
+	value, exists := kademlia.m[hash]
 	if exists {
 		value.DeadAt = time.Now().Add(value.TTL)
 		return value.Data
@@ -79,21 +82,21 @@ func (kademlia *Kademlia) LookupData(hash KademliaID) []byte {
 func (kademlia *Kademlia) Store(data []byte, ttl time.Duration) (KademliaID, time.Time) {
 	hash := HashDataReturnKademliaID(string(data))
 	file := Value{data, 0, ttl, time.Now().Add(ttl)}
-	kademlia.M[*hash] = &file
+	kademlia.m[*hash] = &file
 	return *hash, file.DeadAt
 }
 
 func (kademlia *Kademlia) DeleteOldData() {
-	for hash, value := range kademlia.M {
+	for hash, value := range kademlia.m {
 		fmt.Println("DEAD IS", value.DeadAt)
 		if time.Now().After(value.DeadAt) {
-			delete(kademlia.M, hash)
+			delete(kademlia.m, hash)
 		}
 	}
 }
 
 func (kademlia *Kademlia) RefreshTTL(hash KademliaID) {
-	value, exists := kademlia.M[hash]
+	value, exists := kademlia.m[hash]
 	if exists {
 		value.DeadAt = time.Now().Add(value.TTL)
 	}
@@ -101,5 +104,15 @@ func (kademlia *Kademlia) RefreshTTL(hash KademliaID) {
 
 func (kademlia *Kademlia) AddToKnown(contact *Contact, hash *KademliaID) {
 	kademlia.KnownHolders[*contact] = *hash
-	fmt.Println("KNOWN ARE:", kademlia.KnownHolders)
+}
+
+func (kademlia *Kademlia) RemoveFromKnown(value string) bool {
+	kademliaID := ToKademliaID(value)
+	for contact, data := range kademlia.KnownHolders {
+		if data == kademliaID {
+			delete(kademlia.KnownHolders, contact)
+			return true
+		}
+	}
+	return false
 }

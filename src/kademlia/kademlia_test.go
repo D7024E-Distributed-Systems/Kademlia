@@ -10,7 +10,7 @@ func TestLessThan(t *testing.T) {
 	nodeID := NewKademliaID("A000000000000000000000000000000000000000")
 	nodeID2 := NewKademliaID("B000000000000000000000000000000000000000")
 	res := nodeID.Less(nodeID2)
-	if !res {
+	if res {
 		t.Fail()
 	}
 }
@@ -29,7 +29,7 @@ func TestCalcDistance(t *testing.T) {
 	nodeID2 := NewKademliaID("AAAAAAAAAAAAAAAAA00000000000000000000000")
 	res := nodeID.CalcDistance(nodeID2)
 	fmt.Println(res)
-	if res.String() != "0a0a0aaaaaaaaaaaa00000000000000000000000" {
+	if res.String() != "05065a0254000c535d020604055a05045200550c" {
 		t.Fail()
 	}
 }
@@ -37,15 +37,15 @@ func TestCalcDistance(t *testing.T) {
 func TestInsertData(t *testing.T) {
 	contact := NewContact(NewRandomKademliaID(), "localhost")
 	kd := NewKademliaStruct(NewNetwork(&contact))
-	if len(kd.M) != 0 {
-		fmt.Println(len(kd.M))
+	if len(kd.m) != 0 {
+		fmt.Println(len(kd.m))
 		t.Fail()
 	}
 
 	kd.Store([]byte("AA"), time.Minute)
 
-	if len(kd.M) != 1 {
-		fmt.Println(len(kd.M))
+	if len(kd.m) != 1 {
+		fmt.Println(len(kd.m))
 		t.Fail()
 	}
 }
@@ -79,7 +79,7 @@ func TestDeleteData(t *testing.T) {
 	time.Sleep(1 * time.Second)
 	kd.DeleteOldData()
 
-	if len(kd.M) != 0 {
+	if len(kd.m) != 0 {
 		t.Fail()
 	}
 }
@@ -88,11 +88,11 @@ func TestContacts(t *testing.T) {
 	contact := NewContact(NewKademliaID("A000000000000000000000000000000000000000"), "localhost")
 	contact2 := NewContact(NewKademliaID("B000000000000000000000000000000000000000"), "localhost")
 
-	fmt.Println(contact.String())
-	if contact.String() != "contact(\"a000000000000000000000000000000000000000\", \"localhost\")" {
+	if contact.String() != "contact(\"3766336661383330343961633938656663363462\", \"localhost\")" {
 		t.Fail()
 	}
-	if contact2.String() != "contact(\"b000000000000000000000000000000000000000\", \"localhost\")" {
+	if contact2.String() != "contact(\"3234303561346639636336623337316637323666\", \"localhost\")" {
+
 		t.Fail()
 	}
 }
@@ -120,7 +120,8 @@ func TestDistanceBucket(t *testing.T) {
 	contact := NewContact(nodeId, "")
 	rt := NewRoutingTable(me)
 	rt.AddContact(contact)
-	if !rt.FindClosestContacts(contact.ID, 1)[0].distance.Equals(NewKademliaID("0000000000000000000000000000000000000000")) {
+	fmt.Println(rt.FindClosestContacts(contact.ID, 1)[0].distance.String())
+	if rt.FindClosestContacts(contact.ID, 1)[0].distance.String() != "0000000000000000000000000000000000000000" {
 		t.Fail()
 	}
 }
@@ -151,9 +152,9 @@ func TestFindContact3(t *testing.T) {
 
 func TestFindContact4(t *testing.T) {
 	kademliaNodes := returnKademliaNodes()
-	kadId := NewKademliaID(kademliaNodes[3].Network.CurrentNode.ID.String())
-	res := kademliaNodes[3].LookupContact(kadId)
-	fmt.Println(res, kademliaNodes[3].Network.CurrentNode.ID)
+	kadId := ToKademliaID(kademliaNodes[3].Network.CurrentNode.ID.String())
+	res := kademliaNodes[3].LookupContact(&kadId)
+	fmt.Println(res, kademliaNodes[3].Network.CurrentNode)
 	if res == nil || !res[0].ID.Equals(kademliaNodes[3].Network.CurrentNode.ID) {
 		t.Fail()
 	}
@@ -173,7 +174,7 @@ func returnKademliaNodes() []*Kademlia {
 	network3 := NewNetwork(&contact3)
 	kademlia3 := NewKademliaStruct(network3)
 	nodeID4 := NewKademliaID("D000000000000000000000000000000000000000")
-	contact4 := NewContact(nodeID4, "127.0.0.1:7002")
+	contact4 := NewContact(nodeID4, "127.0.0.1:7003")
 	network4 := NewNetwork(&contact4)
 	kademlia4 := NewKademliaStruct(network4)
 
@@ -214,17 +215,18 @@ func TestBucketLength(t *testing.T) {
 
 }
 
-func TestKademliaIdToSmallValue(t *testing.T) {
-	id := NewKademliaID("Test")
-	if id != nil {
-		t.Fail()
-	}
-}
-
 func TestKademliaIdNotLess(t *testing.T) {
 	id := NewKademliaID("A000000000000000000000000000000000000000")
 	id2 := NewKademliaID("b000000000000000000000000000000000000000")
 	if id2.Less(id) {
+		t.Fail()
+	}
+}
+
+func TestToKademliaID(t *testing.T) {
+	id := NewKademliaID("Test")
+	expected := ToKademliaID(id.String())
+	if *id != expected {
 		t.Fail()
 	}
 }
