@@ -19,8 +19,8 @@ func main() {
 
 	port := 3000
 	restPort := 3001
-	// defaultIp := "130.240.156.194"
-	defaultIp := "173.19.0.2"
+	defaultIp := "130.240.153.179"
+	// defaultIp := "173.19.0.2"
 	// cli.Init(shutdownNode)
 
 	/** //! UNCOMMENT THIS WHEN WE WANT TO GO TO PRODUCTION
@@ -73,7 +73,7 @@ func main() {
 	}
 	currentContact, kademlia := createCurrentContact(ip, port)
 	if success {
-		kademlia.Network.SendStoreMessage([]byte("String"), 15*time.Second, &gatekeeper, kademlia)
+		kademlia.Network.SendStoreMessage([]byte("String"), 15*time.Minute, &gatekeeper, kademlia)
 	}
 	go kademlia.Network.Listen(ip.String(), port, kademlia)
 	// go network.SendFindContactMessage(&currentContact)
@@ -85,12 +85,12 @@ func main() {
 	go cli.Init(shutdownNode, kademlia)
 	// i := 0
 	for {
-		fmt.Println(kademlia.Network.RoutingTable.FindClosestContacts(currentContact.ID, 1000))
+		// fmt.Println(kademlia.Network.RoutingTable.FindClosestContacts(currentContact.ID, 1000))
 		kademlia.DeleteOldData()
 		for contact, hash := range kademlia.KnownHolders {
 			go kademlia.Network.SendRefreshMessage(&hash, &contact)
 		}
-		// network.SendStoreMessage([]byte("String"), time.Second, &gatekeeper)
+		// kademlia.Network.SendStoreMessage([]byte("String"), 15*time.Minute, &gatekeeper, kademlia)
 		time.Sleep(5 * time.Second)
 		// res := network.SendFindDataMessage(hash, &gatekeeper)
 		// fmt.Println("THE SAVED VALUE IS:", res)

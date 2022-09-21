@@ -2,6 +2,7 @@ package kademlia
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net"
 	"strings"
@@ -155,7 +156,7 @@ func handleSendDataResponse(message []byte, network *Network) string {
 				network.SendPingMessage(&contact)
 			}
 		}
-		return string(message[5:])
+		return ""
 	}
 }
 
@@ -169,6 +170,7 @@ func (network *Network) SendStoreMessage(data []byte, ttl time.Duration, contact
 	conn.Write(message)
 	buffer := make([]byte, maxBytes)
 	hash := HashDataReturnKademliaID(string(data))
+	fmt.Println("SENDING STORE WITH HASH", hash.String())
 	kademlia.AddToKnown(contact, hash)
 	conn.SetReadDeadline(time.Now().Add(2 * time.Second))
 	n, err := conn.Read(buffer)
@@ -252,11 +254,5 @@ func handleRefreshResponse(message []byte, network *Network) {
 
 func (network *Network) marshalCurrentNode() []byte {
 	body, _ := json.Marshal(network.CurrentNode)
-	// Commented out because marshal cannot fail with what we send in.
-	// If it would fail here it would have failed earlier already.
-	// if err != nil {
-	// 	log.Println(err)
-	// 	panic(err)
-	// }
 	return body
 }
