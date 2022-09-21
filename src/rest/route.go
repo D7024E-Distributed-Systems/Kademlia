@@ -19,7 +19,7 @@ type data struct {
 func SetGetRoute(w http.ResponseWriter, r *http.Request, kademlia *Kademlia) {
 	str := mux.Vars(r)
 	newKademliaID := ToKademliaID((str["hash"]))
-	message := kademlia.LookupData(*newKademliaID)
+	message, _ := kademlia.GetValue(newKademliaID)
 	fmt.Println("MESSAGE IS", message)
 	if message == nil {
 		fmt.Println("NO SUCH VALUE FOUND ON ID", newKademliaID.String())
@@ -27,10 +27,10 @@ func SetGetRoute(w http.ResponseWriter, r *http.Request, kademlia *Kademlia) {
 		w.Write([]byte("NO SUCH VALUE FOUND"))
 		return
 	}
-	fmt.Println("FOUND", string(message))
+	fmt.Println("FOUND", string(*message))
 	w.WriteHeader(200)
 	w.Write([]byte("FOUND "))
-	w.Write(message)
+	w.Write([]byte(*message))
 }
 
 func SetPostRoute(w http.ResponseWriter, r *http.Request, kademlia *Kademlia, address string) {

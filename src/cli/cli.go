@@ -7,13 +7,14 @@ import (
 	"strings"
 
 	"github.com/D7024E-Distributed-Systems/Kademlia/src/kademlia"
+	. "github.com/D7024E-Distributed-Systems/Kademlia/src/kademlia"
 )
 
-func Init(shutdownNode func(), kademlia *kademlia.Kademlia) {
+func Init(shutdownNode func(), kademlia *Kademlia) {
 	go do(readLine, shutdownNode, kademlia)
 }
 
-func do(readInput func() string, shutdownNode func(), kademlia *kademlia.Kademlia) {
+func do(readInput func() string, shutdownNode func(), kademlia *Kademlia) {
 	for {
 		input := readInput()
 		if stringsEqual(input, "exit") {
@@ -27,6 +28,8 @@ func do(readInput func() string, shutdownNode func(), kademlia *kademlia.Kademli
 			printHelp()
 		} else if stringsEqual(input, "forget") {
 			forgetHelp(kademlia, readInput, kademlia.RemoveFromKnown)
+		} else if stringsEqual(input, "get") {
+			getValue(readInput, kademlia)
 		} else {
 			fmt.Println("Unknown command \"" + input + "\"")
 		}
@@ -70,6 +73,19 @@ func forgetHelp(kademlia *kademlia.Kademlia, readInput func() string, removeFrom
 	} else {
 		fmt.Println("Failed to forget value: ", text)
 	}
+}
+
+func getValue(readInput func() string, kademlia *kademlia.Kademlia) {
+	fmt.Println("Which hash do you want to get?")
+	text := readInput()
+	id := ToKademliaID(text)
+	value, contact := kademlia.GetValue(id)
+	if value == nil {
+		fmt.Println("Error, value not found")
+		return
+	}
+	fmt.Println("\"", *value, "\"found at node", contact.ID)
+
 }
 
 func stringsEqual(a, b string) bool {

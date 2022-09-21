@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/D7024E-Distributed-Systems/Kademlia/src/kademlia"
 	. "github.com/D7024E-Distributed-Systems/Kademlia/src/kademlia"
@@ -141,4 +142,33 @@ func TestForgetFail(t *testing.T) {
 		}
 		return false
 	})
+}
+
+func TestGetSuccess(t *testing.T) {
+	contact := NewContact(NewRandomKademliaID(), "localhost:3000")
+	kademlia := NewKademliaStruct(NewNetwork(&contact))
+	kademlia.Store([]byte("File"), 15*time.Minute)
+	id := NewKademliaID("File")
+	stringid := id.String()
+	val := kademlia.LookupData(*id)
+	if string(val) != "File" {
+		fmt.Println(val)
+		t.Fail()
+	}
+	getValue(
+		func() string { return stringid },
+		kademlia,
+	)
+
+}
+
+func TestGetFailure(t *testing.T) {
+	contact := NewContact(NewRandomKademliaID(), "localhost:3000")
+	kademlia := NewKademliaStruct(NewNetwork(&contact))
+	id := ToKademliaID("File")
+	stringid := id.String()
+	getValue(
+		func() string { return stringid },
+		kademlia,
+	)
 }

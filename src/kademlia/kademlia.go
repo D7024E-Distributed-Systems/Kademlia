@@ -31,14 +31,11 @@ func NewKademliaStruct(network *Network) *Kademlia {
 func (kademlia *Kademlia) LookupContact(target *KademliaID) []Contact {
 	contacts := kademlia.Network.RoutingTable.FindClosestContacts(target, BucketSize)
 	allContacts := kademlia.lookupContactHelper(target, contacts)
-	fmt.Println("TARGET", target, "MAYBE EQUAL TO", kademlia.Network.RoutingTable.me.ID)
 	if target.Equals(kademlia.Network.RoutingTable.me.ID) {
-		fmt.Println("IT'S ME")
 		contact := kademlia.Network.RoutingTable.me
 		contact.CalcDistance(kademlia.Network.CurrentNode.ID)
 		return append([]Contact{contact}, allContacts...)
 	}
-	fmt.Println("IT'S NOT ME")
 	return allContacts
 }
 
@@ -61,7 +58,6 @@ func (kademlia *Kademlia) lookupContactHelper(target *KademliaID, previousContac
 		}
 	}
 	if howManyContactsKnown == len(closestContacts) {
-		fmt.Println("Exiting find contact since we have gotten to n = n-1")
 		return closestContacts
 	} else {
 		return kademlia.lookupContactHelper(target, closestContacts)
@@ -76,6 +72,26 @@ func (kademlia *Kademlia) LookupData(hash KademliaID) []byte {
 		return value.Data
 	}
 	return nil
+}
+
+func (kademlia *Kademlia) GetValue(hash *KademliaID) (*string, Contact) {
+	res := kademlia.LookupData(*hash)
+	if res != nil {
+		ret := string(res)
+		return &ret, *kademlia.Network.CurrentNode
+	}
+	candidates := kademlia.LookupContact(hash)
+	for len(candidates) > 0 {
+		for i := 0; i < alpha; i++ {
+			res := kademlia.Network.SendFindDataMessage(hash, &candidates[0])
+			if res != "" {
+				return &res, candidates[0]
+			}
+			candidates = candidates[1:]
+		}
+		fmt.Println(len(candidates))
+	}
+	return nil, Contact{}
 }
 
 // Stores data in this node, returns hash of object
