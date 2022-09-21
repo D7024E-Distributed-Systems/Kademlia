@@ -19,7 +19,7 @@ type data struct {
 func SetGetRoute(w http.ResponseWriter, r *http.Request, kademlia *Kademlia) {
 	str := mux.Vars(r)
 	newKademliaID := ToKademliaID((str["hash"]))
-	message := kademlia.LookupData(newKademliaID)
+	message := kademlia.LookupData(*newKademliaID)
 	fmt.Println("MESSAGE IS", message)
 	if message == nil {
 		fmt.Println("NO SUCH VALUE FOUND ON ID", newKademliaID.String())
