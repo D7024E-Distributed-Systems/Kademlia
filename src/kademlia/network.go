@@ -168,7 +168,7 @@ func (network *Network) SendStoreMessage(data []byte, ttl time.Duration, contact
 	message := getStoreMessage(network, data, ttl)
 	conn.Write(message)
 	buffer := make([]byte, maxBytes)
-	hash := HashDataReturnKademliaID(string(data))
+	hash := NewKademliaID(string(data))
 	kademlia.AddToKnown(contact, hash)
 	conn.SetReadDeadline(time.Now().Add(2 * time.Second))
 	n, err := conn.Read(buffer)

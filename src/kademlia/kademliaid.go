@@ -16,18 +16,6 @@ type KademliaID [IDLength]byte
 
 // NewKademliaID returns a new instance of a KademliaID based on the string input
 func NewKademliaID(data string) *KademliaID {
-	decoded, _ := hex.DecodeString(data)
-	if len(decoded) < IDLength {
-		return nil
-	}
-	newKademliaID := KademliaID{}
-	for i := 0; i < IDLength; i++ {
-		newKademliaID[i] = decoded[i]
-	}
-	return &newKademliaID
-}
-
-func HashDataReturnKademliaID(data string) *KademliaID {
 	hashBytes := sha1.Sum([]byte(data))
 	hash := hex.EncodeToString(hashBytes[0:IDLength])
 
@@ -37,6 +25,16 @@ func HashDataReturnKademliaID(data string) *KademliaID {
 	}
 
 	return &newKademliaID
+}
+
+func ToKademliaID(bar string) *KademliaID {
+	res, err := hex.DecodeString(bar)
+	if err != nil {
+		fmt.Println("FAILED TO DECODE KADEMLIA ID", err)
+		return nil
+	} else {
+		return (*KademliaID)(res)
+	}
 }
 
 // NewRandomKademliaID returns a new instance of a random KademliaID,
@@ -83,15 +81,4 @@ func (kademliaID KademliaID) CalcDistance(target *KademliaID) *KademliaID {
 // String returns a simple string representation of a KademliaID
 func (kademliaID *KademliaID) String() string {
 	return hex.EncodeToString(kademliaID[0:IDLength])
-}
-
-func ToKademliaID(bar string) KademliaID {
-	res, err := hex.DecodeString(bar)
-	if err != nil {
-		fmt.Println("FAILED TO DECODE KADEMLIA ID", err)
-		return KademliaID{}
-	} else {
-		return *(*KademliaID)(res)
-	}
-	// return *(*KademliaID)(bar)
 }
