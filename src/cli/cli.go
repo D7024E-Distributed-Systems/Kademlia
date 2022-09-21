@@ -55,11 +55,11 @@ func printHelp() {
 
 func findContact(readInput func() string, lookupContact func(*kademlia.KademliaID) []kademlia.Contact) {
 	str := readInput()
-	id := kademlia.NewKademliaID(str)
-	// if id == nil {
-	// 	fmt.Println("Invalid kademlia ID")
-	// 	return
-	// }
+	id := kademlia.ToKademliaID(str)
+	if id == nil {
+		fmt.Println("Invalid ID given")
+		return
+	}
 	contact := lookupContact(id)
 	fmt.Println("Found contact", contact, "from searching in CLI")
 }
@@ -79,7 +79,7 @@ func getValue(readInput func() string, kademlia *kademlia.Kademlia) {
 	fmt.Println("Which hash do you want to get?")
 	text := readInput()
 	id := ToKademliaID(text)
-	value, contact := kademlia.GetValue(&id)
+	value, contact := kademlia.GetValue(id)
 	if value == nil {
 		fmt.Println("Error, value not found")
 		return

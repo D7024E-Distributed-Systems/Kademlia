@@ -2,7 +2,6 @@ package kademlia
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net"
 	"strings"
@@ -169,8 +168,7 @@ func (network *Network) SendStoreMessage(data []byte, ttl time.Duration, contact
 	message := getStoreMessage(network, data, ttl)
 	conn.Write(message)
 	buffer := make([]byte, maxBytes)
-	hash := HashDataReturnKademliaID(string(data))
-	fmt.Println("SENDING STORE WITH HASH", hash.String())
+	hash := NewKademliaID(string(data))
 	kademlia.AddToKnown(contact, hash)
 	conn.SetReadDeadline(time.Now().Add(2 * time.Second))
 	n, err := conn.Read(buffer)

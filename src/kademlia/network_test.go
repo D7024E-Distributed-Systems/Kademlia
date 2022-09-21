@@ -71,7 +71,7 @@ func TestStoreAndFind(t *testing.T) {
 
 	kademlia.DeleteOldData()
 
-	hash := HashDataReturnKademliaID("String")
+	hash := NewKademliaID("String")
 	res := network2.SendFindDataMessage(hash, &contact)
 	if res != "String" {
 		fmt.Println("Res is", res)
@@ -129,7 +129,7 @@ func TestStoreAndFindAndRefresh(t *testing.T) {
 
 	kademlia.DeleteOldData()
 
-	hash := HashDataReturnKademliaID("String")
+	hash := NewKademliaID("String")
 	res := kademlia2.Network.SendFindDataMessage(hash, &contact)
 	if res != "String" {
 		t.Fail()

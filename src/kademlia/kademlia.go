@@ -96,7 +96,7 @@ func (kademlia *Kademlia) GetValue(hash *KademliaID) (*string, Contact) {
 
 // Stores data in this node, returns hash of object
 func (kademlia *Kademlia) Store(data []byte, ttl time.Duration) (KademliaID, time.Time) {
-	hash := HashDataReturnKademliaID(string(data))
+	hash := NewKademliaID(string(data))
 	file := Value{data, 0, ttl, time.Now().Add(ttl)}
 	kademlia.m[*hash] = &file
 	return *hash, file.DeadAt
@@ -125,7 +125,7 @@ func (kademlia *Kademlia) AddToKnown(contact *Contact, hash *KademliaID) {
 func (kademlia *Kademlia) RemoveFromKnown(value string) bool {
 	kademliaID := ToKademliaID(value)
 	for contact, data := range kademlia.KnownHolders {
-		if data == kademliaID {
+		if data == *kademliaID {
 			delete(kademlia.KnownHolders, contact)
 			return true
 		}
