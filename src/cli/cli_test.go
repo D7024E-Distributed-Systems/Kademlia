@@ -165,7 +165,7 @@ func TestGetSuccess(t *testing.T) {
 func TestGetFailure(t *testing.T) {
 	contact := NewContact(NewRandomKademliaID(), "localhost:3000")
 	kademlia := NewKademliaStruct(NewNetwork(&contact))
-	id := ToKademliaID("File")
+	id := NewKademliaID("File")
 	stringid := id.String()
 	getValue(
 		func() string { return stringid },

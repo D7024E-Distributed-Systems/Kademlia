@@ -1,12 +1,15 @@
 package kademlia
 
+import "sync"
+
 const BucketSize = 20
 
 // RoutingTable definition
 // keeps a refrence contact of me and an array of buckets
 type RoutingTable struct {
-	me      Contact
-	buckets [IDLength * 8]*bucket
+	me          Contact
+	buckets     [IDLength * 8]*bucket
+	bucketMutex sync.Mutex
 }
 
 // NewRoutingTable returns a new instance of a RoutingTable
@@ -16,11 +19,14 @@ func NewRoutingTable(me Contact) *RoutingTable {
 		routingTable.buckets[i] = newBucket()
 	}
 	routingTable.me = me
+	routingTable.bucketMutex = sync.Mutex{}
 	return routingTable
 }
 
 // AddContact add a new contact to the correct Bucket
 func (routingTable *RoutingTable) AddContact(contact Contact) {
+	routingTable.bucketMutex.Lock()
+	defer routingTable.bucketMutex.Unlock()
 	bucketIndex := routingTable.getBucketIndex(contact.ID)
 	bucket := routingTable.buckets[bucketIndex]
 	bucket.AddContact(contact)
@@ -29,6 +35,8 @@ func (routingTable *RoutingTable) AddContact(contact Contact) {
 // FindClosestContacts finds the count closest Contacts to the target in the RoutingTable
 func (routingTable *RoutingTable) FindClosestContacts(target *KademliaID, count int) []Contact {
 	var candidates ContactCandidates
+	routingTable.bucketMutex.Lock()
+	defer routingTable.bucketMutex.Unlock()
 	bucketIndex := routingTable.getBucketIndex(target)
 	bucket := routingTable.buckets[bucketIndex]
 
