@@ -1,16 +1,18 @@
 package kademlia
 
 import (
-	"fmt"
+	"sync"
 	"time"
 )
 
 const alpha = 3
 
 type Kademlia struct {
-	m            map[KademliaID]*Value
+	storeValues  map[KademliaID]*Value
+	storeMutex   sync.Mutex
 	Network      *Network
 	KnownHolders map[Contact]KademliaID
+	holderMutex  sync.Mutex
 }
 
 type Value struct {
@@ -22,9 +24,11 @@ type Value struct {
 
 func NewKademliaStruct(network *Network) *Kademlia {
 	kademlia := &Kademlia{}
-	kademlia.m = make(map[KademliaID]*Value)
+	kademlia.storeValues = make(map[KademliaID]*Value)
 	kademlia.Network = network
 	kademlia.KnownHolders = make(map[Contact]KademliaID)
+	kademlia.storeMutex = sync.Mutex{}
+	kademlia.holderMutex = sync.Mutex{}
 	return kademlia
 }
 
@@ -66,7 +70,9 @@ func (kademlia *Kademlia) lookupContactHelper(target *KademliaID, previousContac
 
 // Checks if data is stored in this node, returns data if found
 func (kademlia *Kademlia) LookupData(hash KademliaID) []byte {
-	value, exists := kademlia.m[hash]
+	kademlia.storeMutex.Lock()
+	defer kademlia.storeMutex.Unlock()
+	value, exists := kademlia.storeValues[hash]
 	if exists {
 		value.DeadAt = time.Now().Add(value.TTL)
 		return value.Data
@@ -89,7 +95,6 @@ func (kademlia *Kademlia) GetValue(hash *KademliaID) (*string, Contact) {
 			}
 			candidates = candidates[1:]
 		}
-		fmt.Println(len(candidates))
 	}
 	return nil, Contact{}
 }
@@ -98,31 +103,41 @@ func (kademlia *Kademlia) GetValue(hash *KademliaID) (*string, Contact) {
 func (kademlia *Kademlia) Store(data []byte, ttl time.Duration) (KademliaID, time.Time) {
 	hash := NewKademliaID(string(data))
 	file := Value{data, 0, ttl, time.Now().Add(ttl)}
-	kademlia.m[*hash] = &file
+	// Mutex lock
+	kademlia.storeMutex.Lock()
+	defer kademlia.storeMutex.Unlock()
+	kademlia.storeValues[*hash] = &file
 	return *hash, file.DeadAt
 }
 
 func (kademlia *Kademlia) DeleteOldData() {
-	for hash, value := range kademlia.m {
-		fmt.Println("DEAD IS", value.DeadAt)
+	kademlia.storeMutex.Lock()
+	defer kademlia.storeMutex.Unlock()
+	for hash, value := range kademlia.storeValues {
 		if time.Now().After(value.DeadAt) {
-			delete(kademlia.m, hash)
+			delete(kademlia.storeValues, hash)
 		}
 	}
 }
 
 func (kademlia *Kademlia) RefreshTTL(hash KademliaID) {
-	value, exists := kademlia.m[hash]
+	kademlia.storeMutex.Lock()
+	defer kademlia.storeMutex.Unlock()
+	value, exists := kademlia.storeValues[hash]
 	if exists {
 		value.DeadAt = time.Now().Add(value.TTL)
 	}
 }
 
 func (kademlia *Kademlia) AddToKnown(contact *Contact, hash *KademliaID) {
+	kademlia.holderMutex.Lock()
+	defer kademlia.holderMutex.Unlock()
 	kademlia.KnownHolders[*contact] = *hash
 }
 
 func (kademlia *Kademlia) RemoveFromKnown(value string) bool {
+	kademlia.holderMutex.Lock()
+	defer kademlia.holderMutex.Unlock()
 	kademliaID := ToKademliaID(value)
 	for contact, data := range kademlia.KnownHolders {
 		if data == *kademliaID {
