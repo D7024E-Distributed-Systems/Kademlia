@@ -98,9 +98,10 @@ func (kademlia *Kademlia) GetValue(hash *KademliaID) (*string, Contact) {
 		}
 	}
 	return nil, Contact{}
-	
+}
+
 func (kademlia *Kademlia) StoreRPC(data []byte) []*KademliaID {
-	target := HashDataReturnKademliaID(string(data))
+	target := NewKademliaID(string(data))
 	closest := kademlia.LookupContact(target)
 	var storedNodes []*KademliaID
 	for _, contact := range closest {
