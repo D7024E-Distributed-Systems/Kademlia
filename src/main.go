@@ -19,8 +19,9 @@ func main() {
 
 	port := 3000
 	restPort := 3001
-	// defaultIp := "130.240.153.179"
-	defaultIp := "172.19.0.2"
+	// defaultIp := "130.240.156.194"
+	//defaultIp := "172.19.0.2"
+	defaultIp := "173.19.0.2"
 	// cli.Init(shutdownNode)
 
 	/** //! UNCOMMENT THIS WHEN WE WANT TO GO TO PRODUCTION
@@ -83,6 +84,7 @@ func main() {
 	fmt.Println("Current contact main", currentContact)
 	go GetRoute(ip.String(), restPort, kademlia)
 	go cli.Init(shutdownNode, kademlia)
+
 	// i := 0
 	for {
 		// fmt.Println(kademlia.Network.RoutingTable.FindClosestContacts(currentContact.ID, 1000))

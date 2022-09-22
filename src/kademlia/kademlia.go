@@ -6,6 +6,7 @@ import (
 )
 
 const alpha = 3
+const defaultTTL = 10
 
 type Kademlia struct {
 	storeValues  map[KademliaID]*Value
@@ -97,6 +98,22 @@ func (kademlia *Kademlia) GetValue(hash *KademliaID) (*string, Contact) {
 		}
 	}
 	return nil, Contact{}
+	
+func (kademlia *Kademlia) StoreRPC(data []byte) []*KademliaID {
+	target := HashDataReturnKademliaID(string(data))
+	closest := kademlia.LookupContact(target)
+	var storedNodes []*KademliaID
+	for _, contact := range closest {
+		if contact.ID.Equals(kademlia.Network.RoutingTable.me.ID) {
+			kademlia.Store(data, defaultTTL)
+			continue
+		}
+		res := kademlia.Network.SendStoreMessage(data, defaultTTL, &contact, kademlia)
+		if res {
+			storedNodes = append(storedNodes, contact.ID)
+		}
+	}
+	return storedNodes
 }
 
 // Stores data in this node, returns hash of object
