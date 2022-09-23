@@ -1,2 +1,2 @@
 docker build . -t kademlia
-docker-compose up
+docker compose up
