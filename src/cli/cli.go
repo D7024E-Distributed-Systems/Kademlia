@@ -66,11 +66,11 @@ func findContact(readInput func() string, lookupContact func(*kademlia.KademliaI
 	fmt.Println("Found contact", contact, "from searching in CLI")
 }
 
-func storeValue(readInput func() string, StoreValue func([]byte) []*kademlia.KademliaID) {
+func storeValue(readInput func() string, StoreValue func([]byte) ([]*kademlia.KademliaID, string)) {
 	fmt.Println("What would you like to store?")
 	data := readInput()
-	storedIDs := StoreValue([]byte(data))
-	fmt.Println("Hash of", data, "is", NewKademliaID(data))
+	storedIDs, hash := StoreValue([]byte(data))
+	fmt.Println("Hash of", data, "is", hash)
 	fmt.Println("Stored in nodes: ", storedIDs)
 }
 
