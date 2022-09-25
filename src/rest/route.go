@@ -49,7 +49,7 @@ func SetPostRoute(w http.ResponseWriter, r *http.Request, kademlia *Kademlia, ad
 		w.Write([]byte("FAILED TO PARSE TTL"))
 		return
 	}
-	contacts := kademlia.StoreValue([]byte(data.Value), ttl)
+	contacts, _ := kademlia.StoreValue([]byte(data.Value), ttl)
 	id := NewKademliaID(data.Value)
 	placement := " node"
 	if len(contacts) > 1 {

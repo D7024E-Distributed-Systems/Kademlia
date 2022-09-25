@@ -87,7 +87,7 @@ func TestLookupData(t *testing.T) {
 
 func TestStoreData(t *testing.T) {
 	kademliaNodes := returnKademliaNodes()
-	res := kademliaNodes[3].StoreValue([]byte("lmao"), time.Minute)
+	res, _ := kademliaNodes[3].StoreValue([]byte("lmao"), time.Minute)
 	if len(res) != len(kademliaNodes) {
 		fmt.Println("STORED ON:", res, "\nTOTAL NODES:", len(kademliaNodes))
 		t.Fail()
