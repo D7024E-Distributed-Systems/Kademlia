@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/D7024E-Distributed-Systems/Kademlia/src/kademlia"
 	. "github.com/D7024E-Distributed-Systems/Kademlia/src/kademlia"
@@ -55,7 +56,7 @@ func printHelp() {
 	fmt.Println("\tfind contact - finds the k closest contacts to a given node.")
 }
 
-func findContact(readInput func() string, lookupContact func(*kademlia.KademliaID) []kademlia.Contact) {
+func findContact(readInput func() string, lookupContact func(*kademlia.KademliaID) ContactCandidates) {
 	str := readInput()
 	id := kademlia.ToKademliaID(str)
 	if id == nil {
@@ -63,13 +64,21 @@ func findContact(readInput func() string, lookupContact func(*kademlia.KademliaI
 		return
 	}
 	contact := lookupContact(id)
-	fmt.Println("Found contact", contact, "from searching in CLI")
+	fmt.Println("Found contact", contact.GetContacts(1), "from searching in CLI")
 }
 
-func storeValue(readInput func() string, StoreValue func([]byte) []*kademlia.KademliaID) {
+func storeValue(readInput func() string, StoreValue func([]byte, time.Duration) []*kademlia.KademliaID) {
 	fmt.Println("What would you like to store?")
 	data := readInput()
-	storedIDs := StoreValue([]byte(data))
+	fmt.Println("For how long do you want to store it? (\"10s\", or \"5h30m\")")
+	inp := readInput()
+	ttl, err := time.ParseDuration(inp)
+	if err != nil {
+		fmt.Println("Invalid time, try again")
+		storeValue(readInput, StoreValue)
+		return
+	}
+	storedIDs := StoreValue([]byte(data), ttl)
 	fmt.Println("Hash of", data, "is", NewKademliaID(data))
 	fmt.Println("Stored in nodes: ", storedIDs)
 }
@@ -94,7 +103,7 @@ func getValue(readInput func() string, kademlia *kademlia.Kademlia) {
 		fmt.Println("Error, value not found")
 		return
 	}
-	fmt.Println("\"", *value, "\"found at node", contact.ID)
+	fmt.Println("\""+*value+"\"found at node", contact.ID)
 
 }
 

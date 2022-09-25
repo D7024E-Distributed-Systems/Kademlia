@@ -87,7 +87,7 @@ func TestLookupData(t *testing.T) {
 
 func TestStoreData(t *testing.T) {
 	kademliaNodes := returnKademliaNodes()
-	res := kademliaNodes[3].StoreValue([]byte("lmao"))
+	res := kademliaNodes[3].StoreValue([]byte("lmao"), time.Minute)
 	if len(res) != len(kademliaNodes) {
 		fmt.Println("STORED ON:", res, "\nTOTAL NODES:", len(kademliaNodes))
 		t.Fail()
@@ -159,7 +159,8 @@ func TestDistanceBucket(t *testing.T) {
 
 func TestFindContact(t *testing.T) {
 	kademliaNodes := returnKademliaNodes()
-	res := kademliaNodes[3].LookupContact(kademliaNodes[0].Network.CurrentNode.ID)
+	res := kademliaNodes[3].LookupContact(kademliaNodes[0].Network.CurrentNode.ID).contacts
+	fmt.Println(res, kademliaNodes[0].Network.CurrentNode.ID)
 	if res == nil || !res[0].ID.Equals(kademliaNodes[0].Network.CurrentNode.ID) {
 		t.Fail()
 	}
@@ -167,7 +168,7 @@ func TestFindContact(t *testing.T) {
 
 func TestFindContact2(t *testing.T) {
 	kademliaNodes := returnKademliaNodes()
-	res := kademliaNodes[3].LookupContact(kademliaNodes[1].Network.CurrentNode.ID)
+	res := kademliaNodes[3].LookupContact(kademliaNodes[1].Network.CurrentNode.ID).contacts
 	if res == nil || !res[0].ID.Equals(kademliaNodes[1].Network.CurrentNode.ID) {
 		t.Fail()
 	}
@@ -175,7 +176,7 @@ func TestFindContact2(t *testing.T) {
 
 func TestFindContact3(t *testing.T) {
 	kademliaNodes := returnKademliaNodes()
-	res := kademliaNodes[3].LookupContact(kademliaNodes[2].Network.CurrentNode.ID)
+	res := kademliaNodes[3].LookupContact(kademliaNodes[2].Network.CurrentNode.ID).contacts
 	if res == nil || !res[0].ID.Equals(kademliaNodes[2].Network.CurrentNode.ID) {
 		t.Fail()
 	}
@@ -184,7 +185,7 @@ func TestFindContact3(t *testing.T) {
 func TestFindContact4(t *testing.T) {
 	kademliaNodes := returnKademliaNodes()
 	kadId := ToKademliaID(kademliaNodes[3].Network.CurrentNode.ID.String())
-	res := kademliaNodes[3].LookupContact(kadId)
+	res := kademliaNodes[3].LookupContact(kadId).contacts
 	fmt.Println(res, kademliaNodes[3].Network.CurrentNode)
 	if res == nil || !res[0].ID.Equals(kademliaNodes[3].Network.CurrentNode.ID) {
 		t.Fail()
