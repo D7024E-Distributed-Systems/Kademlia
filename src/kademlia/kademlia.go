@@ -109,7 +109,7 @@ func (kademlia *Kademlia) GetValue(hash *KademliaID) (*string, Contact) {
 }
 
 // Sends store RPCs to nodes that should store the data
-func (kademlia *Kademlia) StoreValue(data []byte, ttl time.Duration) []*KademliaID {
+func (kademlia *Kademlia) StoreValue(data []byte, ttl time.Duration) ([]*KademliaID, string) {
 	target := NewKademliaID(string(data))
 	closest := kademlia.LookupContact(target)
 	var storedNodes []*KademliaID
@@ -124,7 +124,7 @@ func (kademlia *Kademlia) StoreValue(data []byte, ttl time.Duration) []*Kademlia
 			storedNodes = append(storedNodes, contact.ID)
 		}
 	}
-	return storedNodes
+	return storedNodes, target.String()
 }
 
 // Stores data in this node, returns hash of object
