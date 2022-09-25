@@ -28,6 +28,9 @@ func NewKademliaID(data string) *KademliaID {
 }
 
 func ToKademliaID(bar string) *KademliaID {
+	if len(bar) < 40 {
+		return nil
+	}
 	res, err := hex.DecodeString(bar)
 	if err != nil {
 		fmt.Println("FAILED TO DECODE KADEMLIA ID", err)
