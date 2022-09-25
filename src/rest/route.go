@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	. "github.com/D7024E-Distributed-Systems/Kademlia/src/kademlia"
@@ -48,10 +49,16 @@ func SetPostRoute(w http.ResponseWriter, r *http.Request, kademlia *Kademlia, ad
 		w.Write([]byte("FAILED TO PARSE TTL"))
 		return
 	}
-	id, deadAt := kademlia.Store([]byte(data.Value), ttl)
+	contacts := kademlia.StoreValue([]byte(data.Value), ttl)
+	id := NewKademliaID(data.Value)
+	placement := " node"
+	if len(contacts) > 1 {
+		placement = " nodes"
+	}
 	fmt.Println("STORED", id.String())
 	w.WriteHeader(201)
-	w.Write([]byte("Created data " + data.Value + " which will die at " + deadAt.String() + "\n"))
+	w.Write([]byte("Created data " + data.Value + "\n"))
+	w.Write([]byte("The data was stored on " + strconv.Itoa(len(contacts)) + placement + "\n"))
 	w.Write([]byte("Location: " + address + "/objects/" + id.String()))
 }
 

@@ -100,18 +100,13 @@ func TestDoExit(t *testing.T) {
 func TestFindContact(t *testing.T) {
 	findContact(func() string {
 		return "A000000000000000000000000000000000000000"
-	}, func(kad *kademlia.KademliaID) []kademlia.Contact {
+	}, func(kad *kademlia.KademliaID) ContactCandidates {
+		candidates := ContactCandidates{}
 		res := kademlia.NewContact(kad, "localhost")
 		res2 := kademlia.NewContact(kad, "localhost")
-		return []kademlia.Contact{res, res2}
-	})
-}
-
-func TestFindContactNil(t *testing.T) {
-	findContact(func() string {
-		return "A000000000000000000000000000000000000000"
-	}, func(kad *kademlia.KademliaID) []kademlia.Contact {
-		return nil
+		contacts := []kademlia.Contact{res, res2}
+		candidates.Append(contacts)
+		return candidates
 	})
 }
 

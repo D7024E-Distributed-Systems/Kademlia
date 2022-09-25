@@ -33,18 +33,22 @@ func NewKademliaStruct(network *Network) *Kademlia {
 	return kademlia
 }
 
-func (kademlia *Kademlia) LookupContact(target *KademliaID) []Contact {
+func (kademlia *Kademlia) LookupContact(target *KademliaID) ContactCandidates {
 	contacts := kademlia.Network.RoutingTable.FindClosestContacts(target, BucketSize)
-	allContacts := kademlia.lookupContactHelper(target, contacts)
+	contactCandidates := kademlia.lookupContactHelper(target, contacts)
+	allContacts := contactCandidates.contacts
 	if target.Equals(kademlia.Network.RoutingTable.me.ID) || 20 > len(allContacts) {
 		contact := kademlia.Network.RoutingTable.me
-		contact.CalcDistance(kademlia.Network.CurrentNode.ID)
-		return append([]Contact{contact}, allContacts...)
+		contact.CalcDistance(target)
+		allContacts = append([]Contact{contact}, allContacts...)
+		contactCandidates := ContactCandidates{allContacts}
+		contactCandidates.Sort()
+		return contactCandidates
 	}
-	return allContacts
+	return contactCandidates
 }
 
-func (kademlia *Kademlia) lookupContactHelper(target *KademliaID, previousContacts []Contact) []Contact {
+func (kademlia *Kademlia) lookupContactHelper(target *KademliaID, previousContacts []Contact) ContactCandidates {
 	routingTable := NewRoutingTable(*kademlia.Network.CurrentNode)
 	for _, contact := range previousContacts {
 		fetchedContacts := kademlia.Network.SendFindContactMessage(&contact, target)
@@ -63,7 +67,7 @@ func (kademlia *Kademlia) lookupContactHelper(target *KademliaID, previousContac
 		}
 	}
 	if howManyContactsKnown == len(closestContacts) {
-		return closestContacts
+		return ContactCandidates{closestContacts}
 	} else {
 		return kademlia.lookupContactHelper(target, closestContacts)
 	}
@@ -87,31 +91,35 @@ func (kademlia *Kademlia) GetValue(hash *KademliaID) (*string, Contact) {
 		ret := string(res)
 		return &ret, *kademlia.Network.CurrentNode
 	}
-	candidates := kademlia.LookupContact(hash)
+	candidates := kademlia.LookupContact(hash).contacts
 	for len(candidates) > 0 {
 		for i := 0; i < alpha; i++ {
+			if len(candidates) == 0 {
+				break
+			}
 			res := kademlia.Network.SendFindDataMessage(hash, &candidates[0])
-			if res != "" {
+			if !(res == "Error: Invalid contact information" || res == "ERROR") {
 				return &res, candidates[0]
 			}
 			candidates = candidates[1:]
+
 		}
 	}
 	return nil, Contact{}
 }
 
 // Sends store RPCs to nodes that should store the data
-func (kademlia *Kademlia) StoreValue(data []byte) ([]*KademliaID, string) {
+func (kademlia *Kademlia) StoreValue(data []byte, ttl time.Duration) ([]*KademliaID, string) {
 	target := NewKademliaID(string(data))
 	closest := kademlia.LookupContact(target)
 	var storedNodes []*KademliaID
-	for _, contact := range closest {
+	for _, contact := range closest.contacts {
 		if contact.ID.Equals(kademlia.Network.RoutingTable.me.ID) {
-			kademlia.Store(data, defaultTTL)
+			kademlia.Store(data, ttl)
 			storedNodes = append(storedNodes, contact.ID)
 			continue
 		}
-		res := kademlia.Network.SendStoreMessage(data, defaultTTL, &contact, kademlia)
+		res := kademlia.Network.SendStoreMessage(data, ttl, &contact, kademlia)
 		if res {
 			storedNodes = append(storedNodes, contact.ID)
 		}
