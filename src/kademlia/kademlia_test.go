@@ -85,6 +85,21 @@ func TestLookupData(t *testing.T) {
 	}
 }
 
+func TestStoreData(t *testing.T) {
+	kademliaNodes := returnKademliaNodes()
+	res := kademliaNodes[3].StoreValue([]byte("lmao"))
+	if len(res) != len(kademliaNodes) {
+		fmt.Println("STORED ON:", res, "\nTOTAL NODES:", len(kademliaNodes))
+		t.Fail()
+	}
+	for i, node := range kademliaNodes {
+		if len(node.storeValues) == 0 {
+			fmt.Println("Node", i, "has len", len(node.storeValues))
+			t.Fail()
+		}
+	}
+}
+
 func TestDeleteData(t *testing.T) {
 	contact := NewContact(NewRandomKademliaID(), "localhost")
 	kd := NewKademliaStruct(NewNetwork(&contact))

@@ -25,7 +25,7 @@ func do(readInput func() string, shutdownNode func(), kademlia *Kademlia) {
 		} else if stringsEqual(input, "find contact") {
 			findContact(readInput, kademlia.LookupContact)
 		} else if stringsEqual(input, "put") {
-			storeValue(readInput, kademlia.StoreRPC)
+			storeValue(readInput, kademlia.StoreValue)
 		} else if stringsEqual(input, "help") {
 			printHelp()
 		} else if stringsEqual(input, "forget") {
@@ -66,9 +66,11 @@ func findContact(readInput func() string, lookupContact func(*kademlia.KademliaI
 	fmt.Println("Found contact", contact, "from searching in CLI")
 }
 
-func storeValue(readInput func() string, storeRPC func([]byte) []*kademlia.KademliaID) {
+func storeValue(readInput func() string, StoreValue func([]byte) []*kademlia.KademliaID) {
+	fmt.Println("What would you like to store?")
 	data := readInput()
-	storedIDs := storeRPC([]byte(data))
+	storedIDs := StoreValue([]byte(data))
+	fmt.Println("Hash of", data, "is", NewKademliaID(data))
 	fmt.Println("Stored in nodes: ", storedIDs)
 }
 

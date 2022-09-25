@@ -36,7 +36,7 @@ func NewKademliaStruct(network *Network) *Kademlia {
 func (kademlia *Kademlia) LookupContact(target *KademliaID) []Contact {
 	contacts := kademlia.Network.RoutingTable.FindClosestContacts(target, BucketSize)
 	allContacts := kademlia.lookupContactHelper(target, contacts)
-	if target.Equals(kademlia.Network.RoutingTable.me.ID) {
+	if target.Equals(kademlia.Network.RoutingTable.me.ID) || 20 > len(allContacts) {
 		contact := kademlia.Network.RoutingTable.me
 		contact.CalcDistance(kademlia.Network.CurrentNode.ID)
 		return append([]Contact{contact}, allContacts...)
@@ -100,13 +100,15 @@ func (kademlia *Kademlia) GetValue(hash *KademliaID) (*string, Contact) {
 	return nil, Contact{}
 }
 
-func (kademlia *Kademlia) StoreRPC(data []byte) []*KademliaID {
+// Sends store RPCs to nodes that should store the data
+func (kademlia *Kademlia) StoreValue(data []byte) []*KademliaID {
 	target := NewKademliaID(string(data))
 	closest := kademlia.LookupContact(target)
 	var storedNodes []*KademliaID
 	for _, contact := range closest {
 		if contact.ID.Equals(kademlia.Network.RoutingTable.me.ID) {
 			kademlia.Store(data, defaultTTL)
+			storedNodes = append(storedNodes, contact.ID)
 			continue
 		}
 		res := kademlia.Network.SendStoreMessage(data, defaultTTL, &contact, kademlia)
