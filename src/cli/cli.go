@@ -107,6 +107,10 @@ func getValue(readInput func() string, kademlia *kademlia.Kademlia) {
 	text := readInput()
 	id := ToKademliaID(text)
 	t1 := time.Now()
+	if id == nil {
+		fmt.Println("Invalid ID given try \"get\" again")
+		return
+	}
 	value, contact := kademlia.GetValue(id)
 	t2 := time.Now()
 	if value == nil {
