@@ -132,17 +132,30 @@ func (kademlia *Kademlia) StoreValue(data []byte, ttl time.Duration) ([]*Kademli
 	target := NewKademliaID(string(data))
 	closest := kademlia.LookupContact(target)
 	var storedNodes []*KademliaID
+	storedNodesMutex := sync.Mutex{}
+	var wg sync.WaitGroup
+	wg.Add(len(closest.contacts))
+
 	for _, contact := range closest.contacts {
 		if contact.ID.Equals(kademlia.Network.RoutingTable.me.ID) {
 			kademlia.Store(data, ttl)
+			storedNodesMutex.Lock()
 			storedNodes = append(storedNodes, contact.ID)
+			storedNodesMutex.Unlock()
+			wg.Done()
 			continue
 		}
-		res := kademlia.Network.SendStoreMessage(data, ttl, &contact, kademlia)
-		if res {
-			storedNodes = append(storedNodes, contact.ID)
-		}
+		go func(contact Contact) {
+			defer wg.Done()
+			res := kademlia.Network.SendStoreMessage(data, ttl, &contact, kademlia)
+			if res {
+				storedNodesMutex.Lock()
+				storedNodes = append(storedNodes, contact.ID)
+				storedNodesMutex.Unlock()
+			}
+		}(contact)
 	}
+	wg.Wait()
 	return storedNodes, target.String()
 }
 
