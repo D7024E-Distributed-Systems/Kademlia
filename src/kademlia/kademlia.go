@@ -102,16 +102,26 @@ func (kademlia *Kademlia) GetValue(hash *KademliaID) (*string, Contact) {
 	}
 	candidates := kademlia.LookupContact(hash).contacts
 	for len(candidates) > 0 {
-		for i := 0; i < alpha; i++ {
-			if len(candidates) == 0 {
-				break
-			}
-			res := kademlia.Network.SendFindDataMessage(hash, &candidates[0])
-			if !(res == "Error: Invalid contact information" || res == "ERROR") {
-				return &res, candidates[0]
-			}
+		length := min(alpha, len(candidates))
+		var wg sync.WaitGroup
+		wg.Add(length)
+		var resString *string = nil
+		var resCandidate Contact = Contact{}
+		for i := 0; i < length; i++ {
+			go func(candidate Contact) {
+				defer wg.Done()
+				res := kademlia.Network.SendFindDataMessage(hash, &candidate)
+				if !(res == "Error: Invalid contact information" || res == "ERROR" || res == "") {
+					// no need for mutex lock since if we get here they will all return the same value
+					resString = &res
+					resCandidate = candidate
+				}
+			}(candidates[0])
 			candidates = candidates[1:]
-
+		}
+		wg.Wait()
+		if resString != nil {
+			return resString, resCandidate
 		}
 	}
 	return nil, Contact{}
@@ -183,4 +193,11 @@ func (kademlia *Kademlia) RemoveFromKnown(value string) bool {
 		}
 	}
 	return false
+}
+
+func min(a, b int) int {
+	if a <= b {
+		return a
+	}
+	return b
 }

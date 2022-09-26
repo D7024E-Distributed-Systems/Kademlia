@@ -145,14 +145,14 @@ func TestGetSuccess(t *testing.T) {
 	kademlia := NewKademliaStruct(NewNetwork(&contact))
 	kademlia.Store([]byte("File"), 15*time.Minute)
 	id := NewKademliaID("File")
-	stringid := id.String()
+	stringId := id.String()
 	val := kademlia.LookupData(*id)
 	if string(val) != "File" {
 		fmt.Println(val)
 		t.Fail()
 	}
 	getValue(
-		func() string { return stringid },
+		func() string { return stringId },
 		kademlia,
 	)
 
@@ -162,9 +162,9 @@ func TestGetFailure(t *testing.T) {
 	contact := NewContact(NewRandomKademliaID(), "localhost:3000")
 	kademlia := NewKademliaStruct(NewNetwork(&contact))
 	id := NewKademliaID("File")
-	stringid := id.String()
+	stringId := id.String()
 	getValue(
-		func() string { return stringid },
+		func() string { return stringId },
 		kademlia,
 	)
 }
