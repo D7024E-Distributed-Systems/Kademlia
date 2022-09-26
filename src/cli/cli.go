@@ -53,18 +53,24 @@ func shouldExit(readInput func() string) bool {
 func printHelp() {
 	fmt.Println("Available commands:")
 	fmt.Println("\texit - shuts down the current node and all data will be lost.")
-	fmt.Println("\tfind contact - finds the k closest contacts to a given node.")
+	fmt.Println("\tfind contact - finds the", BucketSize, "closest contacts to a given node.")
+	fmt.Println("\tget - gets the value of a specific hash given.")
+	fmt.Println("\tput - stores a string value.")
+	fmt.Println("\tforget - forgets a value of a specific hash given.")
 }
 
 func findContact(readInput func() string, lookupContact func(*kademlia.KademliaID) ContactCandidates) {
+	fmt.Println("Enter a node ID to look for")
 	str := readInput()
 	id := kademlia.ToKademliaID(str)
 	if id == nil {
 		fmt.Println("Invalid ID given")
 		return
 	}
+	t1 := time.Now()
 	contact := lookupContact(id)
-	fmt.Println("Found contact", contact.GetContacts(1), "from searching in CLI")
+	t2 := time.Now()
+	fmt.Println("Found", contact.Len(), ": Closest contact", contact.GetContacts(1)[0], "-", t2.Sub(t1).Milliseconds(), "ms")
 }
 
 func storeValue(readInput func() string, StoreValue func([]byte, time.Duration) ([]*kademlia.KademliaID, string)) {
@@ -78,8 +84,10 @@ func storeValue(readInput func() string, StoreValue func([]byte, time.Duration) 
 		storeValue(readInput, StoreValue)
 		return
 	}
+	t1 := time.Now()
 	storedIDs, hash := StoreValue([]byte(data), ttl)
-	fmt.Println("Hash of", data, "is", hash)
+	t2 := time.Now()
+	fmt.Println("Hash of", data, "is", hash, "-", t2.Sub(t1).Milliseconds(), "ms")
 	fmt.Println("Stored in nodes: ", storedIDs)
 }
 
@@ -98,12 +106,14 @@ func getValue(readInput func() string, kademlia *kademlia.Kademlia) {
 	fmt.Println("Which hash do you want to get?")
 	text := readInput()
 	id := ToKademliaID(text)
+	t1 := time.Now()
 	value, contact := kademlia.GetValue(id)
+	t2 := time.Now()
 	if value == nil {
-		fmt.Println("Error, value not found")
+		fmt.Println("Error, value not found", "-", t2.Sub(t1).Milliseconds(), "ms")
 		return
 	}
-	fmt.Println("\""+*value+"\"found at node", contact.ID)
+	fmt.Println("\""+*value+"\" found at node", contact.ID, "-", t2.Sub(t1).Milliseconds(), "ms")
 
 }
 

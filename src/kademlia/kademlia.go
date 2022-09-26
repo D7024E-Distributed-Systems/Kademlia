@@ -50,12 +50,21 @@ func (kademlia *Kademlia) LookupContact(target *KademliaID) ContactCandidates {
 
 func (kademlia *Kademlia) lookupContactHelper(target *KademliaID, previousContacts []Contact) ContactCandidates {
 	routingTable := NewRoutingTable(*kademlia.Network.CurrentNode)
+	routingTableLock := sync.Mutex{}
+	var wg sync.WaitGroup
+	wg.Add(len(previousContacts))
 	for _, contact := range previousContacts {
-		fetchedContacts := kademlia.Network.SendFindContactMessage(&contact, target)
-		for _, tempContact := range fetchedContacts {
-			routingTable.AddContact(tempContact)
-		}
+		go func(contact Contact) {
+			defer wg.Done()
+			fetchedContacts := kademlia.Network.SendFindContactMessage(&contact, target)
+			routingTableLock.Lock()
+			defer routingTableLock.Unlock()
+			for _, tempContact := range fetchedContacts {
+				routingTable.AddContact(tempContact)
+			}
+		}(contact)
 	}
+	wg.Wait()
 	closestContacts := routingTable.FindClosestContacts(target, BucketSize)
 	howManyContactsKnown := 0
 	for _, contact := range closestContacts {

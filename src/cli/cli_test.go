@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bytes"
 	"fmt"
 	"testing"
 	"time"
@@ -166,4 +167,23 @@ func TestGetFailure(t *testing.T) {
 		func() string { return stringid },
 		kademlia,
 	)
+}
+
+func TestStoreValue(t *testing.T) {
+	failed := 0
+	storeValue(func() string {
+		return "10m"
+	}, func(data []byte, t time.Duration) ([]*KademliaID, string) {
+		if bytes.Compare(data, []byte("10m")) != 0 {
+			failed += 1
+		}
+		if t != time.Minute*10 {
+			failed += 1
+		}
+		return []*KademliaID{NewRandomKademliaID()}, ""
+	})
+	if failed > 0 {
+
+		t.Fail()
+	}
 }
