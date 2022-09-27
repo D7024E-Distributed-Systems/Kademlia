@@ -19,83 +19,52 @@ func main() {
 
 	port := 3000
 	restPort := 3001
-	// defaultIp := "130.240.156.194"
-	//defaultIp := "172.19.0.2"
-	defaultIp := "173.19.0.2"
-	// cli.Init(shutdownNode)
+	defaultIp := "192.168.1.182"
+	// defaultIp := "172.19.0.2"
+	rand.Seed(time.Now().UnixNano())
+	// defaultIp := "173.19.0.2"
 
-	/** //! UNCOMMENT THIS WHEN WE WANT TO GO TO PRODUCTION
+	currentContact := NewContact(NewRandomKademliaID(), "")
 	ip := getOutboundIP()
-	var currentContact Contact
-	var network *Network
+	var kademlia *Kademlia
+	var contact Contact
 	if ip.String() == defaultIp {
+		contact = NewContact(NewRandomKademliaID(), defaultIp+":"+strconv.Itoa(port))
+		success := NewNetwork(&currentContact).SendPingMessage(&contact)
+		if success {
+			port = rand.Intn(65535-1024) + 1024
+			restPort = rand.Intn(65535-1024) + 1024
+		}
 		// If we are at the local network address we just open the port at 3000
-		currentContact, network = createCurrentContact(ip, port)
-		go network.Listen(ip.String(), port)
+		currentContact, kademlia = createCurrentContact(ip, port)
 	} else {
-		target := NewRandomKademliaID()
-		contact := NewContact(target, defaultIp+":"+strconv.Itoa(port))
-		rand.Seed(time.Now().UnixNano())
+		contact = NewContact(NewRandomKademliaID(), defaultIp+":"+strconv.Itoa(port))
 		// random port number
 		port = rand.Intn(65535-1024) + 1024
-		currentContact, network = createCurrentContact(ip, port)
-		go network.Listen(ip.String(), port)
-		success := network.SendPingMessage(&contact)
+		restPort = rand.Intn(65535-1024) + 1024
+		currentContact, kademlia = createCurrentContact(ip, port)
+		success := kademlia.Network.SendPingMessage(&contact)
 		if !success {
+			fmt.Println("Our IP address is", ip.String())
 			panic("failed to connect to p2p server")
 		}
 	}
 	fmt.Println("Current contact main", currentContact)
-	*/
-
-	// The target is just some random ID and default ip and port
-	target := NewRandomKademliaID()
-	gatekeeper := NewContact(target, defaultIp+":"+strconv.Itoa(port))
-	// Our current contact, which is this node, will be some random ID and no address
-	currentContact := NewContact(NewRandomKademliaID(), "")
-	// we store the success of the ping message, if the ping was successful then we can
-	// start our server on a random port number on our local network. Else we start ourself
-	// at default port.
-	ip := getOutboundIP()
-	fmt.Println(ip)
-	success := NewNetwork(&currentContact).SendPingMessage(&gatekeeper)
-	if ip.String() != defaultIp && !success {
-		fmt.Println("Our IP address is", ip.String())
-		panic("Couldn't connect to p2p network")
-	}
-	if success {
-		fmt.Println("Random port")
-		rand.Seed(time.Now().UnixNano())
-		// random port number
-		port = rand.Intn(65535-1024) + 1024
-		rand.Seed(time.Now().UnixNano())
-
-		restPort = rand.Intn(65535-1024) + 1024
-	}
-	currentContact, kademlia := createCurrentContact(ip, port)
-	if success {
-		kademlia.Network.SendStoreMessage([]byte("String"), 15*time.Minute, &gatekeeper, kademlia)
-	}
 	go kademlia.Network.Listen(ip.String(), port, kademlia)
-	// go network.SendFindContactMessage(&currentContact)
-	// go network.SendPingMessage(&contact)
-	kademlia.Network.SendFindContactMessage(&gatekeeper, currentContact.ID)
-	// hash := NewKademliaID("String")
-	fmt.Println("Current contact main", currentContact)
 	go GetRoute(ip.String(), restPort, kademlia)
 	go cli.Init(shutdownNode, kademlia)
-
-	// i := 0
+	kademlia.Network.SendFindContactMessage(&contact, currentContact.ID)
+	i := 0
 	for {
-		// fmt.Println(kademlia.Network.RoutingTable.FindClosestContacts(currentContact.ID, 1000))
+		i++
 		kademlia.DeleteOldData()
 		for contact, hash := range kademlia.KnownHolders {
 			go kademlia.Network.SendRefreshMessage(&hash, &contact)
 		}
-		// kademlia.Network.SendStoreMessage([]byte("String"), 15*time.Minute, &gatekeeper, kademlia)
+		if i%6 == 0 {
+			fmt.Println(kademlia.Network.RoutingTable.FindClosestContacts(NewRandomKademliaID(), 1000))
+		}
 		time.Sleep(5 * time.Second)
-		// res := network.SendFindDataMessage(hash, &gatekeeper)
-		// fmt.Println("THE SAVED VALUE IS:", res)
 	}
 }
 
