@@ -1,3 +1,6 @@
+Run cli commands in docker container
+docker attach <name> to access the cli for the given container
+
 Run in terminal:
 docker exec -it <container name> bash
 example: docker exec -it kademlia_kademliaNodes_1 bash
