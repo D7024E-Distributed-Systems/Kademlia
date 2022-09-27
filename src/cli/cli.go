@@ -12,7 +12,7 @@ import (
 )
 
 func Init(shutdownNode func(), kademlia *Kademlia) {
-	go do(readLine, shutdownNode, kademlia)
+	do(readLine, shutdownNode, kademlia)
 }
 
 func do(readInput func() string, shutdownNode func(), kademlia *Kademlia) {
