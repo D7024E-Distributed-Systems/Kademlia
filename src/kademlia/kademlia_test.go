@@ -34,6 +34,13 @@ func TestKademliaId(t *testing.T) {
 	}
 }
 
+func TestToKademliaId(t *testing.T) {
+	node := ToKademliaID("A0000000000000000000000000000000000000000")
+	if node != nil {
+		t.Fail()
+	}
+}
+
 func TestEqual(t *testing.T) {
 	nodeID := ToKademliaID("A000000000000000000000000000000000000000")
 	nodeID2 := ToKademliaID("A000000000000000000000000000000000000000")
@@ -389,5 +396,35 @@ func TestBucketRemoveContact(t *testing.T) {
 	if !found {
 		t.Fail()
 	}
+}
 
+func TestBucketRemoveContact2(t *testing.T) {
+	nodeID := ToKademliaID("AB00000000000000000000000000000000000000")
+	contact := NewContact(nodeID, ("127.0.0.1:9986"))
+	network := NewNetwork(&contact)
+	kademlia := NewKademliaStruct(network)
+	go kademlia.Network.Listen("127.0.0.1", 9986, kademlia)
+	bucket := newBucket()
+	self := NewContact(NewRandomKademliaID(), "127.0.0.1:9986")
+	length := BucketSize + 1
+	kadId := ToKademliaID("A000000000000000000000000000000000000000")
+	for i := 0; i < length; i++ {
+		contact := NewContact(NewRandomKademliaID(), "127.0.0.1:9986")
+		if i == length-1 {
+			contact.ID = kadId
+		}
+		bucket.AddContact(contact, self, &sync.Mutex{})
+	}
+	time.Sleep(1 * time.Millisecond)
+	contacts := bucket.GetContactAndCalcDistance(kadId)
+	found := false
+	for _, c := range contacts {
+		if c.ID.Equals(kadId) {
+			found = true
+			break
+		}
+	}
+	if found {
+		t.Fail()
+	}
 }

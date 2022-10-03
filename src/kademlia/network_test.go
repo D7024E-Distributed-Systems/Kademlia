@@ -35,6 +35,16 @@ func TestPingNode(t *testing.T) {
 	return
 }
 
+func TestPingNode2(t *testing.T) {
+	nodeID := NewRandomKademliaID()
+	contact := NewContact(nodeID, "127.0.:8000")
+	network := NewNetwork(&contact)
+
+	if network.SendPingMessage(&contact) {
+		t.Fail()
+	}
+}
+
 func TestFindNode(t *testing.T) {
 	nodeID := NewRandomKademliaID()
 	contact := NewContact(nodeID, "127.0.0.1:8001")
@@ -48,6 +58,51 @@ func TestFindNode(t *testing.T) {
 	time.Sleep(1 * time.Millisecond)
 
 	return
+}
+
+func TestFindNode2(t *testing.T) {
+	nodeID := NewRandomKademliaID()
+	contact := NewContact(nodeID, "127.0.:8000")
+	network := NewNetwork(&contact)
+
+	res := network.SendFindContactMessage(&contact, NewRandomKademliaID())
+	if res != nil {
+		t.Fail()
+	}
+}
+
+func TestFindDataMessage(t *testing.T) {
+	nodeID := NewRandomKademliaID()
+	contact := NewContact(nodeID, "127.0.:8000")
+	network := NewNetwork(&contact)
+
+	res := network.SendFindDataMessage(NewRandomKademliaID(), &contact)
+	if res != "ERROR" {
+		t.Fail()
+	}
+}
+
+func TestSendStoreMessage(t *testing.T) {
+	nodeID := NewRandomKademliaID()
+	contact := NewContact(nodeID, "127.0.:8000")
+	network := NewNetwork(&contact)
+	kademlia := NewKademliaStruct(network)
+
+	res := network.SendStoreMessage([]byte("test"), time.Duration(1*time.Second), &contact, kademlia)
+	if res != false {
+		t.Fail()
+	}
+}
+
+func TestSendRefreshMessage(t *testing.T) {
+	nodeID := NewRandomKademliaID()
+	contact := NewContact(nodeID, "127.0.:8000")
+	network := NewNetwork(&contact)
+
+	res := network.SendRefreshMessage(NewRandomKademliaID(), &contact)
+	if res != false {
+		t.Fail()
+	}
 }
 
 func TestStoreAndFind(t *testing.T) {
