@@ -90,12 +90,12 @@ func TestStoreData(t *testing.T) {
 	res, _ := kademliaNodes[3].StoreValue([]byte("lmao"), time.Minute)
 	if len(res) != len(kademliaNodes) {
 		fmt.Println("STORED ON:", res, "\nTOTAL NODES:", len(kademliaNodes))
-		t.Fail()
+		t.FailNow()
 	}
 	for i, node := range kademliaNodes {
 		if len(node.storeValues) == 0 {
 			fmt.Println("Node", i, "has len", len(node.storeValues))
-			t.Fail()
+			t.FailNow()
 		}
 	}
 }
