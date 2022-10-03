@@ -147,6 +147,49 @@ func TestStoreAndFindAndRefresh(t *testing.T) {
 	return
 }
 
+func TestStoreAndFindAndRefreshLoop(t *testing.T) {
+	t.Parallel()
+	nodeID := NewRandomKademliaID()
+	time.Sleep(100 * time.Millisecond)
+	nodeID2 := NewRandomKademliaID()
+	contact := NewContact(nodeID, "127.0.0.1:8005")
+	contact2 := NewContact(nodeID2, "127.0.0.1:8006")
+	network := NewNetwork(&contact)
+	network2 := NewNetwork(&contact2)
+	kademlia := NewKademliaStruct(network)
+	kademlia2 := NewKademliaStruct(network2)
+
+	go network.Listen("127.0.0.1", 8005, kademlia)
+	go network2.Listen("127.0.0.1", 8006, kademlia2)
+
+	time.Sleep(1 * time.Millisecond)
+
+	kademlia2.Network.SendStoreMessage([]byte("String"), 5*time.Second, &contact, kademlia2)
+
+	time.Sleep(1 * time.Millisecond)
+
+	go kademlia2.Network.RefreshLoop(kademlia2)
+
+	kademlia.DeleteOldData()
+
+	hash := NewKademliaID("String")
+	res := kademlia2.Network.SendFindDataMessage(hash, &contact)
+	if res != "String" {
+		t.Fail()
+	}
+
+	kademlia2.Network.SendRefreshMessage(hash, &contact)
+	time.Sleep(4 * time.Second)
+	kademlia.DeleteOldData()
+	res2 := network2.SendFindDataMessage(hash, &contact)
+
+	if res2 != "String" {
+		t.Fail()
+	}
+
+	return
+}
+
 func TestListenFailure(t *testing.T) {
 	defer func() { recover() }()
 
