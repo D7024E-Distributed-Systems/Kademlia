@@ -107,7 +107,6 @@ func TestSendRefreshMessage(t *testing.T) {
 
 func TestStoreAndFind(t *testing.T) {
 	nodeID := NewRandomKademliaID()
-	time.Sleep(100 * time.Millisecond)
 	nodeID2 := NewRandomKademliaID()
 	contact := NewContact(nodeID, "127.0.0.1:8002")
 	contact2 := NewContact(nodeID2, "127.0.0.1:8003")
