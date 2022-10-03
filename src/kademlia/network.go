@@ -237,6 +237,15 @@ func getRefreshMessage(network *Network, hash *KademliaID) []byte {
 
 }
 
+func (network *Network) RefreshLoop(kademlia *Kademlia) {
+	for {
+		for contact, hash := range kademlia.KnownHolders {
+			go kademlia.Network.SendRefreshMessage(&hash, &contact)
+		}
+		time.Sleep(1 * time.Second)
+	}
+}
+
 func handleRefreshResponse(message []byte, network *Network) {
 	if string(message[:5]) == "Error" {
 		log.Println(string(message))

@@ -71,19 +71,21 @@ func main() {
 	time.Sleep(1 * time.Second)
 	// call findContactMessage for find ourself
 	kademlia.Network.SendFindContactMessage(&contact, currentContact.ID)
-	i := 0
-	// for loop to not exit the main thread
-	for {
-		i++
-		kademlia.DeleteOldData()
-		for contact, hash := range kademlia.KnownHolders {
-			go kademlia.Network.SendRefreshMessage(&hash, &contact)
-		}
-		if i%6 == 0 {
-			fmt.Println(kademlia.Network.RoutingTable.FindClosestContacts(NewRandomKademliaID(), 1000))
-		}
-		time.Sleep(5 * time.Second)
-	}
+	go kademlia.Network.RefreshLoop(kademlia)
+	go kademlia.DeleteOldDataLoop()
+	// i := 0
+	// // for loop to not exit the main thread
+	// for {
+	// 	i++
+	// 	kademlia.DeleteOldData()
+	// 	for contact, hash := range kademlia.KnownHolders {
+	// 		go kademlia.Network.SendRefreshMessage(&hash, &contact)
+	// 	}
+	// 	if i%6 == 0 {
+	// 		fmt.Println(kademlia.Network.RoutingTable.FindClosestContacts(NewRandomKademliaID(), 1000))
+	// 	}
+	// 	time.Sleep(5 * time.Second)
+	// }
 }
 
 /*

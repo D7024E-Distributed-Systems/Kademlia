@@ -171,6 +171,13 @@ func (kademlia *Kademlia) Store(data []byte, ttl time.Duration) (KademliaID, tim
 	return *hash, file.DeadAt
 }
 
+func (kademlia *Kademlia) DeleteOldDataLoop() {
+	for {
+		kademlia.DeleteOldData()
+		time.Sleep(1 * time.Second)
+	}
+}
+
 func (kademlia *Kademlia) DeleteOldData() {
 	kademlia.storeMutex.Lock()
 	defer kademlia.storeMutex.Unlock()
