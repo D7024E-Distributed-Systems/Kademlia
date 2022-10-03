@@ -52,8 +52,10 @@ func (kademlia *Kademlia) lookupContactHelper(target *KademliaID, previousContac
 	routingTable := NewRoutingTable(*kademlia.Network.CurrentNode)
 	routingTableLock := sync.Mutex{}
 	var wg sync.WaitGroup
-	wg.Add(len(previousContacts))
-	for _, contact := range previousContacts {
+	length := min(alpha, len(previousContacts))
+	wg.Add(length)
+	for i := 0; i < length; i++ {
+		contact := previousContacts[i]
 		go func(contact Contact) {
 			defer wg.Done()
 			fetchedContacts := kademlia.Network.SendFindContactMessage(&contact, target)
@@ -135,7 +137,6 @@ func (kademlia *Kademlia) StoreValue(data []byte, ttl time.Duration) ([]*Kademli
 	storedNodesMutex := sync.Mutex{}
 	var wg sync.WaitGroup
 	wg.Add(len(closest.contacts))
-
 	for _, contact := range closest.contacts {
 		if contact.ID.Equals(kademlia.Network.RoutingTable.me.ID) {
 			kademlia.Store(data, ttl)
