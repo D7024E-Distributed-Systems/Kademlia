@@ -19,7 +19,7 @@ func newBucket() *bucket {
 
 // AddContact adds the Contact to the front of the bucket
 // or moves it to the front of the bucket if it already existed
-func (bucket *bucket) AddContact(contact Contact) {
+func (bucket *bucket) AddContact(contact Contact, self Contact) {
 	var element *list.Element
 	for e := bucket.list.Front(); e != nil; e = e.Next() {
 		nodeID := e.Value.(Contact).ID
@@ -32,6 +32,10 @@ func (bucket *bucket) AddContact(contact Contact) {
 	if element == nil {
 		if bucket.list.Len() < BucketSize {
 			bucket.list.PushFront(contact)
+		} else {
+			if bucket.pingAlphaNodesAndRemove(self) {
+				bucket.list.PushFront(contact)
+			}
 		}
 	} else {
 		bucket.list.MoveToFront(element)
@@ -55,4 +59,22 @@ func (bucket *bucket) GetContactAndCalcDistance(target *KademliaID) []Contact {
 // Len return the size of the bucket
 func (bucket *bucket) Len() int {
 	return bucket.list.Len()
+}
+
+func (bucket *bucket) pingAlphaNodesAndRemove(self Contact) bool {
+	network := NewNetwork(&self)
+	i := 0
+	length := min(alpha, bucket.Len())
+	for e := bucket.list.Back(); e != nil; e = e.Prev() {
+		if i >= length {
+			break
+		}
+		contact := e.Value.(Contact)
+		if !network.SendPingMessage(&contact) {
+			bucket.list.Remove(e)
+			return true
+		}
+		i++
+	}
+	return false
 }
