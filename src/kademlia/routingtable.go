@@ -29,7 +29,7 @@ func (routingTable *RoutingTable) AddContact(contact Contact) {
 	defer routingTable.bucketMutex.Unlock()
 	bucketIndex := routingTable.getBucketIndex(contact.ID)
 	bucket := routingTable.buckets[bucketIndex]
-	bucket.AddContact(contact, routingTable.me)
+	bucket.AddContact(contact, routingTable.me, &routingTable.bucketMutex)
 }
 
 // FindClosestContacts finds the count closest Contacts to the target in the RoutingTable

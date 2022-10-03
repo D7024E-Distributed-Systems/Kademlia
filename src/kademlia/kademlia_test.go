@@ -2,6 +2,7 @@ package kademlia
 
 import (
 	"fmt"
+	"sync"
 	"testing"
 	"time"
 )
@@ -293,12 +294,12 @@ func TestBucketLength(t *testing.T) {
 	if buck.Len() != 0 {
 		t.Fail()
 	}
-	buck.AddContact(NewContact(NewRandomKademliaID(), ""), contact)
+	buck.AddContact(NewContact(NewRandomKademliaID(), ""), contact, &sync.Mutex{})
 	if buck.Len() != 1 {
 		t.Fail()
 	}
 	time.Sleep(1 * time.Millisecond)
-	buck.AddContact(NewContact(NewRandomKademliaID(), ""), contact)
+	buck.AddContact(NewContact(NewRandomKademliaID(), ""), contact, &sync.Mutex{})
 	if buck.Len() != 2 {
 		t.Fail()
 	}
@@ -369,8 +370,9 @@ func TestBucketRemoveContact(t *testing.T) {
 			fmt.Println(len(bucket.GetContactAndCalcDistance(kadId)))
 
 		}
-		bucket.AddContact(contact, self)
+		bucket.AddContact(contact, self, &sync.Mutex{})
 	}
+	time.Sleep(1 * time.Millisecond)
 	contacts := bucket.GetContactAndCalcDistance(kadId)
 	fmt.Println(contacts)
 	fmt.Println(len(contacts))

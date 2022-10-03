@@ -2,6 +2,7 @@ package kademlia
 
 import (
 	"container/list"
+	"sync"
 )
 
 // bucket definition
@@ -19,7 +20,7 @@ func newBucket() *bucket {
 
 // AddContact adds the Contact to the front of the bucket
 // or moves it to the front of the bucket if it already existed
-func (bucket *bucket) AddContact(contact Contact, self Contact) {
+func (bucket *bucket) AddContact(contact Contact, self Contact, mutex *sync.Mutex) {
 	var element *list.Element
 	for e := bucket.list.Front(); e != nil; e = e.Next() {
 		nodeID := e.Value.(Contact).ID
@@ -33,9 +34,13 @@ func (bucket *bucket) AddContact(contact Contact, self Contact) {
 		if bucket.list.Len() < BucketSize {
 			bucket.list.PushFront(contact)
 		} else {
-			if bucket.pingAlphaNodesAndRemove(self) {
-				bucket.list.PushFront(contact)
-			}
+			go func() {
+				if bucket.pingAlphaNodesAndRemove(self, mutex) {
+					mutex.Lock()
+					bucket.list.PushFront(contact)
+					mutex.Unlock()
+				}
+			}()
 		}
 	} else {
 		bucket.list.MoveToFront(element)
@@ -61,7 +66,7 @@ func (bucket *bucket) Len() int {
 	return bucket.list.Len()
 }
 
-func (bucket *bucket) pingAlphaNodesAndRemove(self Contact) bool {
+func (bucket *bucket) pingAlphaNodesAndRemove(self Contact, mutex *sync.Mutex) bool {
 	network := NewNetwork(&self)
 	i := 0
 	length := min(alpha, bucket.Len())
@@ -71,7 +76,9 @@ func (bucket *bucket) pingAlphaNodesAndRemove(self Contact) bool {
 		}
 		contact := e.Value.(Contact)
 		if !network.SendPingMessage(&contact) {
+			mutex.Lock()
 			bucket.list.Remove(e)
+			mutex.Unlock()
 			return true
 		}
 		i++

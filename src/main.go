@@ -21,7 +21,7 @@ func main() {
 	// Default ip and port for first connection to Kademlia network
 	port := 3000
 	restPort := 3001
-	// defaultIp := "192.168.1.182"
+	// defaultIp := "130.240.157.28"
 	defaultIp := "172.19.0.2"
 	// defaultIp := "173.19.0.2"
 
@@ -64,7 +64,6 @@ func main() {
 	fmt.Println("Current contact main", currentContact)
 	// start this node to listen to incoming messages
 	go kademlia.Network.Listen(ip.String(), port, kademlia)
-	go GetRoute(ip.String(), restPort, kademlia)
 	// starts the cli "class"
 	go cli.Init(shutdownNode, kademlia)
 	// sleep for 1 second to make sure everything has time to be initialized
@@ -73,19 +72,7 @@ func main() {
 	kademlia.Network.SendFindContactMessage(&contact, currentContact.ID)
 	go kademlia.Network.RefreshLoop(kademlia)
 	go kademlia.DeleteOldDataLoop()
-	// i := 0
-	// // for loop to not exit the main thread
-	// for {
-	// 	i++
-	// 	kademlia.DeleteOldData()
-	// 	for contact, hash := range kademlia.KnownHolders {
-	// 		go kademlia.Network.SendRefreshMessage(&hash, &contact)
-	// 	}
-	// 	if i%6 == 0 {
-	// 		fmt.Println(kademlia.Network.RoutingTable.FindClosestContacts(NewRandomKademliaID(), 1000))
-	// 	}
-	// 	time.Sleep(5 * time.Second)
-	// }
+	GetRoute(ip.String(), restPort, kademlia)
 }
 
 /*
