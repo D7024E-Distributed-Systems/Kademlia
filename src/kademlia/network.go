@@ -20,6 +20,7 @@ func (network *Network) SendPingMessage(contact *Contact) bool {
 	conn, err3 := net.Dial("udp4", contact.Address)
 	if err3 != nil {
 		log.Println(err3)
+		return false
 	}
 	defer conn.Close()
 	message := getPingMessage(network)

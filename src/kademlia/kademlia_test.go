@@ -2,6 +2,7 @@ package kademlia
 
 import (
 	"fmt"
+	"sync"
 	"testing"
 	"time"
 )
@@ -288,16 +289,17 @@ func returnKademliaNodes(i int) []*Kademlia {
 }
 
 func TestBucketLength(t *testing.T) {
+	contact := NewContact(NewRandomKademliaID(), "")
 	buck := newBucket()
 	if buck.Len() != 0 {
 		t.Fail()
 	}
-	buck.AddContact(NewContact(NewRandomKademliaID(), ""))
+	buck.AddContact(NewContact(NewRandomKademliaID(), ""), contact, &sync.Mutex{})
 	if buck.Len() != 1 {
 		t.Fail()
 	}
 	time.Sleep(1 * time.Millisecond)
-	buck.AddContact(NewContact(NewRandomKademliaID(), ""))
+	buck.AddContact(NewContact(NewRandomKademliaID(), ""), contact, &sync.Mutex{})
 	if buck.Len() != 2 {
 		t.Fail()
 	}
@@ -347,4 +349,45 @@ func TestRemoveFromKnownFailure(t *testing.T) {
 	if len(kademlia.KnownHolders) != 1 {
 		t.Fail()
 	}
+}
+
+func TestBucketRemoveContact(t *testing.T) {
+	bucket := newBucket()
+	self := NewContact(NewRandomKademliaID(), "localhost:3000")
+	length := BucketSize + 2
+	kadId := ToKademliaID("A000000000000000000000000000000000000000")
+	kadId2 := ToKademliaID("B000000000000000000000000000000000000000")
+	for i := 0; i < length; i++ {
+		contact := NewContact(NewRandomKademliaID(), "localhost:3000")
+		if i == 0 {
+			contact.ID = kadId2
+		}
+		if i == length-1 {
+			contact.ID = kadId
+		}
+		if i == length-2 {
+			fmt.Println(bucket.GetContactAndCalcDistance(kadId))
+			fmt.Println(len(bucket.GetContactAndCalcDistance(kadId)))
+
+		}
+		bucket.AddContact(contact, self, &sync.Mutex{})
+	}
+	time.Sleep(1 * time.Millisecond)
+	contacts := bucket.GetContactAndCalcDistance(kadId)
+	fmt.Println(contacts)
+	fmt.Println(len(contacts))
+	found := false
+	for _, c := range contacts {
+		if c.ID.Equals(kadId) {
+			found = true
+		}
+		if c.ID.Equals(kadId2) {
+			fmt.Println("Kademlia id shouldn't exists in the bucket list")
+			t.FailNow()
+		}
+	}
+	if !found {
+		t.Fail()
+	}
+
 }
