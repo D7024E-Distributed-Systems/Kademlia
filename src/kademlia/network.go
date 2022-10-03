@@ -60,6 +60,7 @@ func (network *Network) SendFindContactMessage(contact *Contact, nodeID *Kademli
 	conn, err3 := net.Dial("udp4", contact.Address)
 	if err3 != nil {
 		log.Println(err3)
+		return nil
 	}
 	defer conn.Close()
 	message := getFindContactMessage(network, nodeID)
@@ -75,10 +76,7 @@ func (network *Network) SendFindContactMessage(contact *Contact, nodeID *Kademli
 }
 
 func getFindContactMessage(network *Network, nodeID *KademliaID) []byte {
-	body, err := json.Marshal(nodeID)
-	if err != nil {
-		log.Println(err)
-	}
+	body, _ := json.Marshal(nodeID)
 	startMessage := []byte(newFindContact().startMessage + ";" + string(body) + ";")
 	body2 := network.marshalCurrentNode()
 	return append(startMessage, body2...)
@@ -108,6 +106,7 @@ func (network *Network) SendFindDataMessage(hash *KademliaID, contact *Contact) 
 	conn, err3 := net.Dial("udp4", contact.Address)
 	if err3 != nil {
 		log.Println(err3)
+		return "ERROR"
 	}
 	defer conn.Close()
 	message := getFindDataMessage(network, hash)
@@ -125,10 +124,7 @@ func (network *Network) SendFindDataMessage(hash *KademliaID, contact *Contact) 
 }
 
 func getFindDataMessage(network *Network, hash *KademliaID) []byte {
-	body, err := json.Marshal(hash)
-	if err != nil {
-		log.Println(err)
-	}
+	body, _ := json.Marshal(hash)
 	startMessage := []byte(newFindData().startMessage + ";" + string(body) + ";")
 	body2 := network.marshalCurrentNode()
 	return append(startMessage, body2...)
@@ -164,6 +160,7 @@ func (network *Network) SendStoreMessage(data []byte, ttl time.Duration, contact
 	conn, err3 := net.Dial("udp4", contact.Address)
 	if err3 != nil {
 		log.Println(err3)
+		return false
 	}
 	defer conn.Close()
 	message := getStoreMessage(network, data, ttl)
@@ -182,14 +179,8 @@ func (network *Network) SendStoreMessage(data []byte, ttl time.Duration, contact
 }
 
 func getStoreMessage(network *Network, data []byte, ttl time.Duration) []byte {
-	body, err := json.Marshal(data)
-	if err != nil {
-		log.Println(err)
-	}
-	body2, err2 := json.Marshal(ttl)
-	if err2 != nil {
-		log.Println(err2)
-	}
+	body, _ := json.Marshal(data)
+	body2, _ := json.Marshal(ttl)
 	startMessage := []byte(newStoreMessage().startMessage + ";" + string(body) + ";" + string(body2) + ";")
 	body3 := network.marshalCurrentNode()
 	return append(startMessage, body3...)
@@ -212,6 +203,7 @@ func (network *Network) SendRefreshMessage(hash *KademliaID, contact *Contact) b
 	conn, err3 := net.Dial("udp4", contact.Address)
 	if err3 != nil {
 		log.Println(err3)
+		return false
 	}
 	defer conn.Close()
 	message := getRefreshMessage(network, hash)
@@ -228,10 +220,7 @@ func (network *Network) SendRefreshMessage(hash *KademliaID, contact *Contact) b
 }
 
 func getRefreshMessage(network *Network, hash *KademliaID) []byte {
-	body, err := json.Marshal(hash)
-	if err != nil {
-		log.Println(err)
-	}
+	body, _ := json.Marshal(hash)
 	startMessage := []byte(newRefreshmessage().startMessage + ";" + string(body) + ";")
 	body2 := network.marshalCurrentNode()
 	return append(startMessage, body2...)

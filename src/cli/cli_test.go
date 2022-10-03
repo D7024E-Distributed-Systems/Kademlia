@@ -3,6 +3,7 @@ package cli
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -75,6 +76,113 @@ func TestPrintHelp(t *testing.T) {
 	printHelp()
 }
 
+func TestFindContactWithDo(t *testing.T) {
+	contact := NewContact(NewRandomKademliaID(), "")
+	network := NewNetwork(&contact)
+	quit := make(chan bool)
+	i := 0
+	go do(func() string {
+		if i == 0 {
+			i++
+			return "find contact"
+		} else {
+			quit <- true
+			return ""
+		}
+	}, func() {
+		quit <- true
+	}, NewKademliaStruct(network))
+}
+
+func TestPutWithDo(t *testing.T) {
+	contact := NewContact(NewRandomKademliaID(), "")
+	network := NewNetwork(&contact)
+	quit := make(chan bool)
+	i := 0
+	go do(func() string {
+		if i == 0 {
+			i++
+			return "put"
+		} else {
+			quit <- true
+			return ""
+		}
+	}, func() {
+		quit <- true
+	}, NewKademliaStruct(network))
+}
+
+func TestHelpWithDo(t *testing.T) {
+	contact := NewContact(NewRandomKademliaID(), "")
+	network := NewNetwork(&contact)
+	quit := make(chan bool)
+	i := 0
+	go do(func() string {
+		if i == 0 {
+			i++
+			return "help"
+		} else {
+			quit <- true
+			return ""
+		}
+	}, func() {
+		quit <- true
+	}, NewKademliaStruct(network))
+}
+
+func TestForgetWithDo(t *testing.T) {
+	contact := NewContact(NewRandomKademliaID(), "")
+	network := NewNetwork(&contact)
+	quit := make(chan bool)
+	i := 0
+	go do(func() string {
+		if i == 0 {
+			i++
+			return "forget"
+		} else {
+			quit <- true
+			return ""
+		}
+	}, func() {
+		quit <- true
+	}, NewKademliaStruct(network))
+}
+
+func TestGetWithDo(t *testing.T) {
+	contact := NewContact(NewRandomKademliaID(), "")
+	network := NewNetwork(&contact)
+	quit := make(chan bool)
+	i := 0
+	go do(func() string {
+		if i == 0 {
+			i++
+			return "get"
+		} else {
+			quit <- true
+			return ""
+		}
+	}, func() {
+		quit <- true
+	}, NewKademliaStruct(network))
+}
+func TestNothingWithDo(t *testing.T) {
+	contact := NewContact(NewRandomKademliaID(), "")
+	network := NewNetwork(&contact)
+	quit := make(chan bool)
+	i := 0
+	go do(func() string {
+		if i == 0 {
+			i++
+			return "abc"
+		} else {
+			quit <- true
+			return ""
+		}
+	}, func() {
+		quit <- true
+	}, NewKademliaStruct(network))
+}
+
 func TestDoExit(t *testing.T) {
 	Iter = 0
 	Done = false
@@ -101,6 +209,19 @@ func TestDoExit(t *testing.T) {
 func TestFindContact(t *testing.T) {
 	findContact(func() string {
 		return "A000000000000000000000000000000000000000"
+	}, func(kad *kademlia.KademliaID) ContactCandidates {
+		candidates := ContactCandidates{}
+		res := kademlia.NewContact(kad, "localhost")
+		res2 := kademlia.NewContact(kad, "localhost")
+		contacts := []kademlia.Contact{res, res2}
+		candidates.Append(contacts)
+		return candidates
+	})
+}
+
+func TestFindContact2(t *testing.T) {
+	findContact(func() string {
+		return "A0000000000000000000000000000000000000000"
 	}, func(kad *kademlia.KademliaID) ContactCandidates {
 		candidates := ContactCandidates{}
 		res := kademlia.NewContact(kad, "localhost")
@@ -155,7 +276,6 @@ func TestGetSuccess(t *testing.T) {
 		func() string { return stringId },
 		kademlia,
 	)
-
 }
 
 func TestGetFailure(t *testing.T) {
@@ -165,6 +285,15 @@ func TestGetFailure(t *testing.T) {
 	stringId := id.String()
 	getValue(
 		func() string { return stringId },
+		kademlia,
+	)
+}
+
+func TestGetFailure2(t *testing.T) {
+	contact := NewContact(NewRandomKademliaID(), "localhost:3000")
+	kademlia := NewKademliaStruct(NewNetwork(&contact))
+	getValue(
+		func() string { return "A0000000000000000000000000000000000000000" },
 		kademlia,
 	)
 }
@@ -186,4 +315,32 @@ func TestStoreValue(t *testing.T) {
 
 		t.Fail()
 	}
+}
+
+func TestStoreValueFailure(t *testing.T) {
+	failed := 0
+	go storeValue(func() string {
+		return "10x"
+	}, func(data []byte, t time.Duration) ([]*KademliaID, string) {
+		if bytes.Compare(data, []byte("10x")) != 0 {
+			failed += 1
+		}
+		if t != time.Minute*10 {
+			failed += 1
+		}
+		return []*KademliaID{NewRandomKademliaID()}, ""
+	})
+	time.Sleep(1 * time.Millisecond)
+	return
+
+}
+
+func TestInit(t *testing.T) {
+	contact := NewContact(NewRandomKademliaID(), "")
+	network := NewNetwork(&contact)
+	go Init(func() {
+		os.Exit(0)
+	}, NewKademliaStruct(network))
+	time.Sleep(1 * time.Millisecond)
+	return
 }
