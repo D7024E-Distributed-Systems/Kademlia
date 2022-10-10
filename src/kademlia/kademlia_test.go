@@ -2,6 +2,7 @@ package kademlia
 
 import (
 	"fmt"
+	"strconv"
 	"sync"
 	"testing"
 	"time"
@@ -138,7 +139,10 @@ func TestGetValueNil(t *testing.T) {
 func TestStoreData(t *testing.T) {
 	kademliaNodes := returnKademliaNodes(i)
 	i = i + 4
-	res, _ := kademliaNodes[3].StoreValue([]byte("lmao"), time.Minute)
+
+	res, _ := kademliaNodes[3].StoreValue([]byte("test"), time.Minute)
+	time.Sleep(time.Second)
+
 	if len(res) != len(kademliaNodes) {
 		fmt.Println("STORED ON:", res, "\nTOTAL NODES:", len(kademliaNodes))
 		t.FailNow()
@@ -159,6 +163,25 @@ func TestDeleteDataLoop(t *testing.T) {
 	time.Sleep(time.Second)
 
 	return
+}
+func TestContactSelf(t *testing.T) {
+	contacts := returnContacts(21)
+	network := NewNetwork(&contacts[0])
+	kademlia := NewKademliaStruct(network)
+
+	contactCandidates := ContactCandidates{contacts[1:]} //Simulate 20 found nodes other than self
+	res := kademlia.lookupContactSelf(ToKademliaID("00000000000000000000000000000000000000ff"), contactCandidates)
+	fmt.Println("RESPONSE:", res.contacts)
+	if len(res.contacts) != 20 {
+		fmt.Println("len of contacts", len(res.contacts))
+		t.Fail()
+	}
+	for _, contact := range res.contacts {
+		if contact.ID == kademlia.Network.CurrentNode.ID {
+			fmt.Println("Self is included (should not be)")
+			t.Fail()
+		}
+	}
 }
 
 func TestDeleteData(t *testing.T) {
@@ -293,6 +316,63 @@ func returnKademliaNodes(i int) []*Kademlia {
 	kademliaArray[2] = kademlia3
 	kademliaArray[3] = kademlia4
 	return kademliaArray
+}
+
+func returnKademliaNodesN(amount int64) []*Kademlia {
+	kademliaArray := make([]*Kademlia, amount)
+
+	nodeID := ToKademliaID("0000000000000000000000000000000000000000")
+	contact := NewContact(nodeID, "127.0.0.1:7000")
+	network := NewNetwork(&contact)
+	kademlia := NewKademliaStruct(network)
+	go kademlia.Network.Listen("127.0.0.1", 7000, kademlia)
+	fmt.Println("Contact 0", kademlia.Network.CurrentNode.ID)
+	kademliaArray[0] = kademlia
+	var i int64
+	for i = 1; i < amount; i++ {
+		port := strconv.FormatInt(7000+i, 10)
+		var nodeID *KademliaID
+		if i < 16 {
+			nodeID = ToKademliaID("000000000000000000000000000000000000000" + strconv.FormatInt(i, 16))
+		} else {
+			nodeID = ToKademliaID("00000000000000000000000000000000000000" + strconv.FormatInt(i, 16))
+		}
+		contact := NewContact(nodeID, "127.0.0.1:"+port)
+		network := NewNetwork(&contact)
+		kademlia := NewKademliaStruct(network)
+		portInt, _ := strconv.Atoi(port)
+		go kademlia.Network.Listen("127.0.0.1", portInt, kademlia)
+		kademlia.Network.RoutingTable.AddContact(kademliaArray[i-1].Network.RoutingTable.me)
+		fmt.Println("Contact", i, "\tID:", kademlia.Network.CurrentNode.ID)
+		kademliaArray[i] = kademlia
+	}
+	time.Sleep(1 * time.Second)
+	return kademliaArray
+}
+
+func returnContacts(amount int64) []Contact {
+	contactArray := make([]Contact, amount)
+
+	nodeID := ToKademliaID("0000000000000000000000000000000000000000")
+	contact := NewContact(nodeID, "127.0.0.1:7000")
+	contactArray[0] = contact
+	var i int64
+	for i = 1; i < amount; i++ {
+		port := strconv.FormatInt(7000+i, 10)
+		var nodeID *KademliaID
+		if i == 1 {
+			nodeID = ToKademliaID("000000000000000000000000000000000000000" + strconv.FormatInt(i, 16))
+		} else if i < 16 {
+			nodeID = ToKademliaID("000000000000000000000000000000000000000" + strconv.FormatInt(i, 16))
+		} else {
+			nodeID = ToKademliaID("00000000000000000000000000000000000000" + strconv.FormatInt(i, 16))
+		}
+		contact := NewContact(nodeID, "127.0.0.1:"+port)
+		contactArray[i] = contact
+
+	}
+	time.Sleep(1 * time.Second)
+	return contactArray
 }
 
 func TestBucketLength(t *testing.T) {
