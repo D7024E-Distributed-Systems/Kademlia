@@ -50,6 +50,9 @@ func main() {
 	} else {
 		// if we're at a different ip address then the defaultIp then we try to connect to the network
 		contact = NewContact(NewRandomKademliaID(), defaultIp+":"+strconv.Itoa(port))
+		// sets a random port number
+		port = rand.Intn(65535-1024) + 1024
+		restPort = rand.Intn(65535-1024) + 1024
 		currentContact, kademlia = createCurrentContact(ip, port)
 		success := kademlia.Network.SendPingMessage(&contact)
 		// if not successful we will panic since we couldn't connect to the kademlia network
@@ -57,9 +60,6 @@ func main() {
 			fmt.Println("Our IP address is", ip.String())
 			panic("failed to connect to p2p server")
 		}
-		// sets a random port number
-		port = rand.Intn(65535-1024) + 1024
-		restPort = rand.Intn(65535-1024) + 1024
 	}
 	fmt.Println("Current contact main", currentContact)
 	// start this node to listen to incoming messages

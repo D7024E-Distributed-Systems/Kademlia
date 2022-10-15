@@ -44,8 +44,6 @@ func handleUDPConnection(conn *net.UDPConn, Network *Network, kademlia *Kademlia
 		log.Fatal(err)
 	}
 
-	fmt.Println("\tReceived from UDP client :", string(buffer[:n]))
-
 	message := getResponseMessage(buffer[:n], Network, kademlia)
 
 	_, err = conn.WriteToUDP(message, addr)
@@ -107,7 +105,6 @@ func getResponseMessage(message []byte, Network *Network, kademlia *Kademlia) []
 		body, _ := json.Marshal(closestNodes)
 		return []byte("CONT" + string(body))
 	} else if resMessage[0] == newRefreshmessage().startMessage {
-		fmt.Println("RECEIVED REFRESH")
 		var hash *KademliaID
 		json.Unmarshal([]byte(resMessage[1]), &hash)
 		kademlia.RefreshTTL(*hash)

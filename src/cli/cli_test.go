@@ -183,6 +183,24 @@ func TestNothingWithDo(t *testing.T) {
 	}, NewKademliaStruct(network))
 }
 
+func TestGetTableDo(t *testing.T) {
+	contact := NewContact(NewRandomKademliaID(), "")
+	network := NewNetwork(&contact)
+	quit := make(chan bool)
+	i := 0
+	go do(func() string {
+		if i == 0 {
+			i++
+			return "table"
+		} else {
+			quit <- true
+			return ""
+		}
+	}, func() {
+		quit <- true
+	}, NewKademliaStruct(network))
+}
+
 func TestDoExit(t *testing.T) {
 	Iter = 0
 	Done = false
