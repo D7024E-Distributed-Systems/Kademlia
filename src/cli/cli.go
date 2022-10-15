@@ -33,6 +33,8 @@ func do(readInput func() string, shutdownNode func(), kademlia *Kademlia) {
 			forgetHelp(kademlia, readInput, kademlia.RemoveFromKnown)
 		} else if stringsEqual(input, "get") {
 			getValue(readInput, kademlia)
+		} else if stringsEqual(input, "table") {
+			fmt.Println("table length is", len(kademlia.Network.RoutingTable.FindClosestContacts(NewRandomKademliaID(), 9999)))
 		} else {
 			fmt.Println("Unknown command \"" + input + "\"")
 		}
