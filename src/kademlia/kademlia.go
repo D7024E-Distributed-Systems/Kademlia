@@ -23,6 +23,10 @@ type Value struct {
 	DeadAt             time.Time
 }
 
+/*
+Returns a new Kademlia struct, tied to a certain network
+  - network *Network, the network
+*/
 func NewKademliaStruct(network *Network) *Kademlia {
 	kademlia := &Kademlia{}
 	kademlia.storeValues = make(map[KademliaID]*Value)
@@ -33,10 +37,13 @@ func NewKademliaStruct(network *Network) *Kademlia {
 	return kademlia
 }
 
+/*
+Looks up a certain contact, traversing the kademlia network until it finds that contact
+  - target *KademliaID, the contact to be found
+*/
 func (kademlia *Kademlia) LookupContact(target *KademliaID) ContactCandidates {
 	contacts := kademlia.Network.RoutingTable.FindClosestContacts(target, BucketSize)
 	allContactsSelf := kademlia.lookupContactHelper(target, contacts)
-	// allContactsSelf := kademlia.lookupContactSelf(target, contactCandidates)
 	if target.Equals(kademlia.Network.RoutingTable.me.ID) {
 		allContacts := allContactsSelf.contacts
 		contact := kademlia.Network.RoutingTable.me
@@ -49,6 +56,11 @@ func (kademlia *Kademlia) LookupContact(target *KademliaID) ContactCandidates {
 	return allContactsSelf
 }
 
+/*
+Helper function for finding a contact. Sends RPC:s to known contacts. Recursively calls itself until it either finds the contact or comes no closer.
+  - target *KademliaID, the contact to be found
+  - previousContacts []Contact, the previous closest contacts. Used in the recursive calls
+*/
 func (kademlia *Kademlia) lookupContactHelper(target *KademliaID, previousContacts []Contact) ContactCandidates {
 	routingTable := NewRoutingTable(*kademlia.Network.CurrentNode)
 	routingTableLock := sync.Mutex{}
@@ -86,7 +98,10 @@ func (kademlia *Kademlia) lookupContactHelper(target *KademliaID, previousContac
 	}
 }
 
-// Checks if data is stored in this node, returns data if found
+/*
+Looks in the current node if a certain hash is stored as a key
+  - hash KademliaID, the hash to be found
+*/
 func (kademlia *Kademlia) LookupData(hash KademliaID) []byte {
 	kademlia.storeMutex.Lock()
 	defer kademlia.storeMutex.Unlock()
@@ -98,6 +113,10 @@ func (kademlia *Kademlia) LookupData(hash KademliaID) []byte {
 	return nil
 }
 
+/*
+Gets a value stored somewhere in the kademlia network. Calls on LookupContact to find eligible contacts.
+  - hash *KademliaID, the hash of the object to retrieve
+*/
 func (kademlia *Kademlia) GetValue(hash *KademliaID) (*string, Contact) {
 	res := kademlia.LookupData(*hash)
 	if res != nil {
@@ -131,7 +150,11 @@ func (kademlia *Kademlia) GetValue(hash *KademliaID) (*string, Contact) {
 	return nil, Contact{}
 }
 
-// Sends store RPCs to nodes that should store the data
+/*
+Stores a value somewhere in the kademlia network. Calls on LookupContact to find eligible contacts.
+  - data []byte, the data to be stored
+  - ttl time.Duration, the time-to-live for the object to be stored
+*/
 func (kademlia *Kademlia) StoreValue(data []byte, ttl time.Duration) ([]*KademliaID, string) {
 	target := NewKademliaID(string(data))
 	closest := kademlia.LookupContact(target)
@@ -163,7 +186,11 @@ func (kademlia *Kademlia) StoreValue(data []byte, ttl time.Duration) ([]*Kademli
 	return storedNodes, target.String()
 }
 
-// Stores data in this node, returns hash of object
+/*
+Stores data in this node, returns the hash of the object and when it will die.
+  - data []byte, the data to be stored
+  - ttl time.Duration, the time-to-live for the object to be stored
+*/
 func (kademlia *Kademlia) Store(data []byte, ttl time.Duration) (KademliaID, time.Time) {
 	hash := NewKademliaID(string(data))
 	file := Value{data, 0, ttl, time.Now().Add(ttl)}
@@ -174,6 +201,9 @@ func (kademlia *Kademlia) Store(data []byte, ttl time.Duration) (KademliaID, tim
 	return *hash, file.DeadAt
 }
 
+/*
+A loop used for deleting old values.
+*/
 func (kademlia *Kademlia) DeleteOldDataLoop() {
 	for {
 		kademlia.DeleteOldData()
@@ -181,6 +211,9 @@ func (kademlia *Kademlia) DeleteOldDataLoop() {
 	}
 }
 
+/*
+Goes through each object stored and deletes it if it's ttl has expired
+*/
 func (kademlia *Kademlia) DeleteOldData() {
 	kademlia.storeMutex.Lock()
 	defer kademlia.storeMutex.Unlock()
@@ -191,6 +224,10 @@ func (kademlia *Kademlia) DeleteOldData() {
 	}
 }
 
+/*
+Refreshes the ttl of an object.
+  - hash KademliaID, the object to refresh
+*/
 func (kademlia *Kademlia) RefreshTTL(hash KademliaID) {
 	kademlia.storeMutex.Lock()
 	defer kademlia.storeMutex.Unlock()
@@ -200,12 +237,21 @@ func (kademlia *Kademlia) RefreshTTL(hash KademliaID) {
 	}
 }
 
+/*
+Adds a contact to the Kademlia struct's known holders. This list is used to send refresh messages.
+  - contact *Contact, the contact to add.
+  - hash *KademliaID, the hash associated with a contact.
+*/
 func (kademlia *Kademlia) AddToKnown(contact *Contact, hash *KademliaID) {
 	kademlia.holderMutex.Lock()
 	defer kademlia.holderMutex.Unlock()
 	kademlia.KnownHolders[*contact] = *hash
 }
 
+/*
+Removes a contact from the known holders based on the value of the hash it is associated with.
+  - value string, the value of the object
+*/
 func (kademlia *Kademlia) RemoveFromKnown(value string) bool {
 	kademlia.holderMutex.Lock()
 	defer kademlia.holderMutex.Unlock()

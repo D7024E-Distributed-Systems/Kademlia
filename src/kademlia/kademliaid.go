@@ -14,7 +14,10 @@ const IDLength = 20
 // type definition of a KademliaID
 type KademliaID [IDLength]byte
 
-// NewKademliaID returns a new instance of a KademliaID based on the string input
+/*
+Makes a new KademliaID from a string.
+  - data string, the value that should be hashed to a KademliaID
+*/
 func NewKademliaID(data string) *KademliaID {
 	hashBytes := sha1.Sum([]byte(data))
 	hash := hex.EncodeToString(hashBytes[0:IDLength])
@@ -27,6 +30,10 @@ func NewKademliaID(data string) *KademliaID {
 	return &newKademliaID
 }
 
+/*
+Casts a string to a KademliaID. Note that this is not the same as NewKademliaID().
+  - bar string, the string to cast
+*/
 func ToKademliaID(bar string) *KademliaID {
 	if len(bar) < 40 {
 		return nil
@@ -40,8 +47,9 @@ func ToKademliaID(bar string) *KademliaID {
 	}
 }
 
-// NewRandomKademliaID returns a new instance of a random KademliaID,
-// change this to a better version if you like
+/*
+Makes a random new KademliaID
+*/
 func NewRandomKademliaID() *KademliaID {
 	rand.Seed(time.Now().UnixNano())
 	newKademliaID := KademliaID{}
@@ -51,7 +59,10 @@ func NewRandomKademliaID() *KademliaID {
 	return &newKademliaID
 }
 
-// Less returns true if kademliaID < otherKademliaID (bitwise)
+/*
+Returns true if kademliaID < otherKademliaID (bitwise)
+  - otherKademliaID *KademliaID, the KademliaID to be compared to
+*/
 func (kademliaID KademliaID) Less(otherKademliaID *KademliaID) bool {
 	for i := 0; i < IDLength; i++ {
 		if kademliaID[i] != otherKademliaID[i] {
@@ -61,7 +72,11 @@ func (kademliaID KademliaID) Less(otherKademliaID *KademliaID) bool {
 	return false
 }
 
-// Equals returns true if kademliaID == otherKademliaID (bitwise)
+// Equals retuns trrue if kademliaID == otherKademliaID (bitwise)
+/*
+Returns trrue if kademliaID == otherKademliaID (bitwise)
+  - otherKademliaID *KademliaID, the KademliaID to be compared to
+*/
 func (kademliaID KademliaID) Equals(otherKademliaID *KademliaID) bool {
 	for i := 0; i < IDLength; i++ {
 		if kademliaID[i] != otherKademliaID[i] {
@@ -71,8 +86,10 @@ func (kademliaID KademliaID) Equals(otherKademliaID *KademliaID) bool {
 	return true
 }
 
-// CalcDistance returns a new instance of a KademliaID that is built
-// through a bitwise XOR operation betweeen kademliaID and target
+/*
+Returns the distance between two KademliaIDs. Uses bitwise XOR.
+  - target *KademliaID, the target to calculate the distance to
+*/
 func (kademliaID KademliaID) CalcDistance(target *KademliaID) *KademliaID {
 	result := KademliaID{}
 	for i := 0; i < IDLength; i++ {
@@ -81,7 +98,9 @@ func (kademliaID KademliaID) CalcDistance(target *KademliaID) *KademliaID {
 	return &result
 }
 
-// String returns a simple string representation of a KademliaID
+/*
+Returns a string representation of a KademliaID
+*/
 func (kademliaID *KademliaID) String() string {
 	return hex.EncodeToString(kademliaID[0:IDLength])
 }

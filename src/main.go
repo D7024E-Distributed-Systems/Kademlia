@@ -65,7 +65,7 @@ func main() {
 	// start this node to listen to incoming messages
 	go kademlia.Network.Listen(ip.String(), port, kademlia)
 	// starts the cli "class"
-	go cli.Init(shutdownNode, kademlia)
+	cli.Init(shutdownNode, kademlia)
 	// sleep for 1 second to make sure everything has time to be initialized
 	time.Sleep(1 * time.Second)
 	// call findContactMessage for find ourself
