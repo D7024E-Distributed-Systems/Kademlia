@@ -11,10 +11,22 @@ import (
 	. "github.com/D7024E-Distributed-Systems/Kademlia/src/kademlia"
 )
 
+/*
+Initializes the CLI.
+  - shutDownNode func(), the function for shutting down a node
+  - kademlia *Kademlia, the kademlia instance, needed for kademlia algorithms
+*/
 func Init(shutdownNode func(), kademlia *Kademlia) {
-	do(readLine, shutdownNode, kademlia)
+	go do(readLine, shutdownNode, kademlia)
 }
 
+/*
+A loop that reads input from the terminal and handles
+CLI commands.
+  - readInput func() string, the function for reading a string from the terminal
+  - shutDownNode func(), the function for shutting down a node
+  - kademlia *Kademlia, the kademlia instance, needed for kademlia algorithms
+*/
 func do(readInput func() string, shutdownNode func(), kademlia *Kademlia) {
 	for {
 		input := readInput()
@@ -42,6 +54,10 @@ func do(readInput func() string, shutdownNode func(), kademlia *Kademlia) {
 	}
 }
 
+/*
+Helper function for determing if a user wants to exit
+  - readInput func() string, the function for reading a string from the terminal
+*/
 func shouldExit(readInput func() string) bool {
 	fmt.Println("Are you sure you want to exit? Y/n")
 	text := readInput()
@@ -52,6 +68,9 @@ func shouldExit(readInput func() string) bool {
 	return false
 }
 
+/*
+Helper function to print all known CLI commands.
+*/
 func printHelp() {
 	fmt.Println("Available commands:")
 	fmt.Println("\texit - shuts down the current node and all data will be lost.")
@@ -59,8 +78,14 @@ func printHelp() {
 	fmt.Println("\tget - gets the value of a specific hash given.")
 	fmt.Println("\tput - stores a string value.")
 	fmt.Println("\tforget - forgets a value of a specific hash given.")
+	fmt.Println("\ttable - prints the number of contacts in the routing table of the current node.")
 }
 
+/*
+Helper function for getting input for finding a contact
+  - readInput func() string, the function for reading a string from the terminal
+  - lookupContact func(*kademlia.KademliaID) ContactCandidates, function for looking up a contact
+*/
 func findContact(readInput func() string, lookupContact func(*kademlia.KademliaID) ContactCandidates) {
 	fmt.Println("Enter a node ID to look for")
 	str := readInput()
@@ -75,6 +100,11 @@ func findContact(readInput func() string, lookupContact func(*kademlia.KademliaI
 	fmt.Println("Found", contact.Len(), ": Closest contact", contact.GetContacts(1)[0], "-", t2.Sub(t1).Milliseconds(), "ms")
 }
 
+/*
+Helper function for getting input for storing data and calling kademlia algorithms
+  - readInput func() string, the function for reading a string from the terminal
+  - StoreValue func([]byte, time.Duration) ([]*kademlia.KademliaID, string), function for storing a string
+*/
 func storeValue(readInput func() string, StoreValue func([]byte, time.Duration) ([]*kademlia.KademliaID, string)) {
 	fmt.Println("What would you like to store?")
 	data := readInput()
@@ -93,6 +123,12 @@ func storeValue(readInput func() string, StoreValue func([]byte, time.Duration) 
 	fmt.Println("Stored in nodes: ", storedIDs)
 }
 
+/*
+Helper function for forgetting refresh
+  - kademlia *Kademlia, the kademlia instance, needed for kademlia algorithms
+  - readInput func() string, the function for reading a string from the terminal
+  - removeFromKnown func(value string) bool, the function to remove a contact from the refresh list
+*/
 func forgetHelp(kademlia *kademlia.Kademlia, readInput func() string, removeFromKnown func(value string) bool) {
 	fmt.Println("Which value do you want to forget?")
 	text := readInput()
@@ -104,6 +140,11 @@ func forgetHelp(kademlia *kademlia.Kademlia, readInput func() string, removeFrom
 	}
 }
 
+/*
+Helper function for getting input to get value
+  - readInput func() string, the function for reading a string from the terminal
+  - kademlia *Kademlia, the kademlia instance, needed for kademlia algorithms
+*/
 func getValue(readInput func() string, kademlia *kademlia.Kademlia) {
 	fmt.Println("Which hash do you want to get?")
 	text := readInput()

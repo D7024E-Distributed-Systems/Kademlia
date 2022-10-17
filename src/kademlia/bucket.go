@@ -5,21 +5,29 @@ import (
 	"sync"
 )
 
-// bucket definition
-// contains a List
+/*
+Bucket struct
+  - list *list.List, a list of contacts
+*/
 type bucket struct {
 	list *list.List
 }
 
-// newBucket returns a new instance of a bucket
+/*
+Returns a new bucket struct
+*/
 func newBucket() *bucket {
 	bucket := &bucket{}
 	bucket.list = list.New()
 	return bucket
 }
 
-// AddContact adds the Contact to the front of the bucket
-// or moves it to the front of the bucket if it already existed
+/*
+AddContact adds a contact to the front of the bucket if not already present, else it moves it to the front
+  - contact Contact, the contact to be added
+  - self Contact, the current node, used to remove stale contacts
+  - mutex *sync.Mutex, mutex lock for thread safety
+*/
 func (bucket *bucket) AddContact(contact Contact, self Contact, mutex *sync.Mutex) {
 	var element *list.Element
 	for e := bucket.list.Front(); e != nil; e = e.Next() {
@@ -47,8 +55,11 @@ func (bucket *bucket) AddContact(contact Contact, self Contact, mutex *sync.Mute
 	}
 }
 
-// GetContactAndCalcDistance returns an array of Contacts where
-// the distance has already been calculated
+/*
+Returns an array of contacts where the distance has already been calculated
+  - target *KademliaID, the target to calculate the distance to
+  - []Contact, the array of contacts with distance calculated
+*/
 func (bucket *bucket) GetContactAndCalcDistance(target *KademliaID) []Contact {
 	var contacts []Contact
 
@@ -61,11 +72,19 @@ func (bucket *bucket) GetContactAndCalcDistance(target *KademliaID) []Contact {
 	return contacts
 }
 
-// Len return the size of the bucket
+/*
+Returns the length of a bucket
+*/
 func (bucket *bucket) Len() int {
 	return bucket.list.Len()
 }
 
+/*
+Removes contacts, starting from the back of a bucket, and goes alpha deep into the bucket.
+It will remove the first contact which does not respond
+  - self Contact, creates a new network with itself as base
+  - mutex *sync.Mutex, mutex lock for thread safety
+*/
 func (bucket *bucket) pingAlphaNodesAndRemove(self Contact, mutex *sync.Mutex) bool {
 	network := NewNetwork(&self)
 	i := 0
