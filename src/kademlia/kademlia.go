@@ -37,10 +37,10 @@ func NewKademliaStruct(network *Network) *Kademlia {
 
 func (kademlia *Kademlia) LookupContact(target *KademliaID) ContactCandidates {
 	contacts := kademlia.Network.RoutingTable.FindClosestContacts(target, BucketSize)
-	contactCandidates := kademlia.lookupContactHelper(target, contacts)
-	allContactsSelf := kademlia.lookupContactSelf(target, contactCandidates)
+	allContactsSelf := kademlia.lookupContactHelper(target, contacts)
+	// allContactsSelf := kademlia.lookupContactSelf(target, contactCandidates)
 	if target.Equals(kademlia.Network.RoutingTable.me.ID) {
-		allContacts := contactCandidates.contacts
+		allContacts := allContactsSelf.contacts
 		contact := kademlia.Network.RoutingTable.me
 		contact.CalcDistance(target)
 		allContacts = append([]Contact{contact}, allContacts...)
@@ -70,6 +70,7 @@ func (kademlia *Kademlia) lookupContactHelper(target *KademliaID, previousContac
 		}(contact)
 	}
 	wg.Wait()
+	routingTable.AddContact(*kademlia.Network.CurrentNode)
 	closestContacts := routingTable.FindClosestContacts(target, BucketSize)
 	howManyContactsKnown := 0
 	for _, contact := range closestContacts {
