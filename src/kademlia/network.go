@@ -161,7 +161,7 @@ Handle the send find data response and parse to see if an error has occurred or 
 func (network *Network) handleSendFindDataResponse(message []byte) string {
 	if string(message[:5]) == "Error" {
 		log.Println(string(message))
-		return string(message)
+		return "ERROR"
 	} else {
 		if string(message[:4]) == "VALU" {
 			resMessage := strings.Split(string(message[5:]), ";")
