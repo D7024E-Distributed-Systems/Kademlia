@@ -164,25 +164,6 @@ func TestDeleteDataLoop(t *testing.T) {
 
 	return
 }
-func TestContactSelf(t *testing.T) {
-	contacts := returnContacts(21)
-	network := NewNetwork(&contacts[0])
-	kademlia := NewKademliaStruct(network)
-
-	contactCandidates := ContactCandidates{contacts[1:]} //Simulate 20 found nodes other than self
-	res := kademlia.lookupContactSelf(ToKademliaID("00000000000000000000000000000000000000ff"), contactCandidates)
-	fmt.Println("RESPONSE:", res.contacts)
-	if len(res.contacts) != 20 {
-		fmt.Println("len of contacts", len(res.contacts))
-		t.Fail()
-	}
-	for _, contact := range res.contacts {
-		if contact.ID == kademlia.Network.CurrentNode.ID {
-			fmt.Println("Self is included (should not be)")
-			t.Fail()
-		}
-	}
-}
 
 func TestDeleteData(t *testing.T) {
 	contact := NewContact(NewRandomKademliaID(), "localhost")

@@ -1,8 +1,6 @@
 package kademlia
 
 import (
-	"fmt"
-	"sort"
 	"sync"
 	"time"
 )
@@ -86,49 +84,6 @@ func (kademlia *Kademlia) lookupContactHelper(target *KademliaID, previousContac
 	} else {
 		return kademlia.lookupContactHelper(target, closestContacts)
 	}
-}
-
-func (kademlia *Kademlia) lookupContactSelf(target *KademliaID, contactCandidates ContactCandidates) ContactCandidates {
-	type Distance struct {
-		contact Contact
-		dist    *KademliaID
-	}
-	contactCandidates.contacts = append(contactCandidates.contacts, kademlia.Network.RoutingTable.me)
-
-	if 20 > len(contactCandidates.contacts) {
-		return contactCandidates
-	}
-
-	var distances []Distance
-
-	distances = append(distances, Distance{kademlia.Network.RoutingTable.me, kademlia.Network.RoutingTable.me.ID.CalcDistance(target)})
-
-	for _, contact := range contactCandidates.contacts {
-		distances = append(distances, Distance{contact, contact.ID.CalcDistance(target)})
-	}
-
-	sort.SliceStable(distances, func(i, j int) bool {
-		return distances[i].dist.Less(distances[j].dist)
-	})
-
-	fmt.Println("Distances:", distances)
-	//distances = distances[:20]
-
-	index := indexOf(contactCandidates.contacts, distances[len(distances)-1].contact)
-
-	returnSlice := append(contactCandidates.contacts[:index], contactCandidates.contacts[index+1:]...)
-	returnCandidates := ContactCandidates{returnSlice}
-
-	return returnCandidates
-}
-
-func indexOf(input []Contact, value Contact) int {
-	for p, v := range input {
-		if v == value {
-			return p
-		}
-	}
-	return -1
 }
 
 // Checks if data is stored in this node, returns data if found
