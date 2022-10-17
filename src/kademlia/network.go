@@ -215,7 +215,7 @@ func (network *Network) SendRefreshMessage(hash *KademliaID, contact *Contact) b
 
 func getRefreshMessage(network *Network, hash *KademliaID) []byte {
 	body, _ := json.Marshal(hash)
-	startMessage := []byte(newRefreshmessage().startMessage + ";" + string(body) + ";")
+	startMessage := []byte(newRefreshMessage().startMessage + ";" + string(body) + ";")
 	body2 := network.marshalCurrentNode()
 	return append(startMessage, body2...)
 

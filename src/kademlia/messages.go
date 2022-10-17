@@ -44,6 +44,6 @@ type RefreshMessage struct {
 	startMessage string
 }
 
-func newRefreshmessage() *RefreshMessage {
+func newRefreshMessage() *RefreshMessage {
 	return &RefreshMessage{"REFR"}
 }

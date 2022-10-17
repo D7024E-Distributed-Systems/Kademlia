@@ -386,10 +386,10 @@ func TestBucketRemoveContact(t *testing.T) {
 	fmt.Println(len(contacts))
 	found := false
 	for _, c := range contacts {
-		if c.ID.Equals(kadId2) {
+		if c.ID.Equals(kadId) {
 			found = true
 		}
-		if c.ID.Equals(kadId) {
+		if c.ID.Equals(kadId2) {
 			fmt.Println("Kademlia id shouldn't exists in the bucket list")
 			t.FailNow()
 		}

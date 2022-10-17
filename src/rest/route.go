@@ -17,6 +17,12 @@ type data struct {
 	TTL   string
 }
 
+/*
+Defines what to do when we receive a get to retrieve the value in the kademlia network
+  - http http.ResponseWriter, to write back the value retrieved from the network
+  - http *http.Request, to read the hash value from the request
+  - kademlia *Kademlia, to search for the value in the kademlia network
+*/
 func SetGetRoute(w http.ResponseWriter, r *http.Request, kademlia *Kademlia) {
 	str := mux.Vars(r)
 	newKademliaID := ToKademliaID((str["hash"]))
@@ -31,6 +37,13 @@ func SetGetRoute(w http.ResponseWriter, r *http.Request, kademlia *Kademlia) {
 	w.Write([]byte(*message))
 }
 
+/*
+Defines what to do when we receive a post request to store data in the kademlia network
+  - http http.ResponseWriter, to write back the hash of the data
+  - http *http.Request, to get the data from the request
+  - kademlia, *Kademlia to store the value sent to this node
+  - address string, to be able to send back our address and port number
+*/
 func SetPostRoute(w http.ResponseWriter, r *http.Request, kademlia *Kademlia, address string) {
 	var data data
 	err := json.NewDecoder(r.Body).Decode(&data)

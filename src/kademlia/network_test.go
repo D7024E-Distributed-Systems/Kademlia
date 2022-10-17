@@ -264,7 +264,7 @@ func TestNonexistentRPC(t *testing.T) {
 	network := NewNetwork(&contact)
 	kademlia := NewKademliaStruct(network)
 
-	res := getResponseMessage([]byte("NONE"), network, kademlia)
+	res := getResponseMessage([]byte("NONE"), kademlia)
 
 	if string(res) != "Error: Invalid RPC protocol" {
 		t.Fail()
