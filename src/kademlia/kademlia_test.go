@@ -439,17 +439,18 @@ func TestBucketRemoveContact(t *testing.T) {
 
 		}
 		bucket.AddContact(contact, self, &sync.Mutex{})
+		time.Sleep(10 * time.Millisecond)
 	}
-	time.Sleep(1 * time.Millisecond)
+	time.Sleep(10 * time.Millisecond)
 	contacts := bucket.GetContactAndCalcDistance(kadId)
 	fmt.Println(contacts)
 	fmt.Println(len(contacts))
 	found := false
 	for _, c := range contacts {
-		if c.ID.Equals(kadId) {
+		if c.ID.Equals(kadId2) {
 			found = true
 		}
-		if c.ID.Equals(kadId2) {
+		if c.ID.Equals(kadId) {
 			fmt.Println("Kademlia id shouldn't exists in the bucket list")
 			t.FailNow()
 		}
@@ -465,6 +466,7 @@ func TestBucketRemoveContact2(t *testing.T) {
 	network := NewNetwork(&contact)
 	kademlia := NewKademliaStruct(network)
 	go kademlia.Network.Listen("127.0.0.1", 9986, kademlia)
+	time.Sleep(10 * time.Millisecond)
 	bucket := newBucket()
 	self := NewContact(NewRandomKademliaID(), "127.0.0.1:9986")
 	length := BucketSize + 1
@@ -475,8 +477,9 @@ func TestBucketRemoveContact2(t *testing.T) {
 			contact.ID = kadId
 		}
 		bucket.AddContact(contact, self, &sync.Mutex{})
+		time.Sleep(10 * time.Millisecond)
 	}
-	time.Sleep(1 * time.Millisecond)
+	time.Sleep(10 * time.Millisecond)
 	contacts := bucket.GetContactAndCalcDistance(kadId)
 	found := false
 	for _, c := range contacts {

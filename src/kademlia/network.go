@@ -31,7 +31,6 @@ func (network *Network) SendPingMessage(contact *Contact) bool {
 	if err != nil {
 		return false
 	}
-	// fmt.Println("\tResponse from server:", string(buffer[:n]))
 	handlePingResponse(buffer[:n], network)
 	return true
 }
@@ -53,7 +52,6 @@ func handlePingResponse(message []byte, network *Network) {
 			network.RoutingTable.AddContact(*contact)
 		}
 	}
-	// fmt.Println("ping response: ", network.routingTable)
 }
 
 func (network *Network) SendFindContactMessage(contact *Contact, nodeID *KademliaID) []Contact {
@@ -71,7 +69,6 @@ func (network *Network) SendFindContactMessage(contact *Contact, nodeID *Kademli
 	if err != nil {
 		return nil
 	}
-	// fmt.Println("\tResponse from server:", string(buffer[:n]))
 	return handleFindContactResponse(buffer[:n], network)
 }
 
@@ -117,7 +114,6 @@ func (network *Network) SendFindDataMessage(hash *KademliaID, contact *Contact) 
 	if err != nil {
 		return "ERROR"
 	}
-	// fmt.Println("\tResponse from server:", string(buffer[:n]))
 	return handleSendDataResponse(buffer[:n], network)
 
 	// TODO
@@ -173,7 +169,6 @@ func (network *Network) SendStoreMessage(data []byte, ttl time.Duration, contact
 	if err != nil {
 		return false
 	}
-	// fmt.Println("\tResponse from server:", string(buffer[:n]))
 	handleStoreResponse(buffer[:n], network)
 	return true
 }
@@ -214,7 +209,6 @@ func (network *Network) SendRefreshMessage(hash *KademliaID, contact *Contact) b
 	if err != nil {
 		return false
 	}
-	// fmt.Println("\tResponse from server:", string(buffer[:n]))
 	handleRefreshResponse(buffer[:n], network)
 	return true
 }
