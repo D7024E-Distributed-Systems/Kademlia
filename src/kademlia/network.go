@@ -8,14 +8,12 @@ import (
 	"time"
 )
 
-/**
- * ping = PING
- * find contact =FICO
- * find data = FIDA
- * store message = STME
- */
 var maxBytes int = 4096
 
+/*
+Sending a ping RPC message to a contact and returns whether it was successful or not
+  - contact *Contact, the contact to send the ping RPC to
+*/
 func (network *Network) SendPingMessage(contact *Contact) bool {
 	conn, err3 := net.Dial("udp4", contact.Address)
 	if err3 != nil {
@@ -23,7 +21,7 @@ func (network *Network) SendPingMessage(contact *Contact) bool {
 		return false
 	}
 	defer conn.Close()
-	message := getPingMessage(network)
+	message := network.getPingMessage()
 	conn.Write(message)
 	buffer := make([]byte, maxBytes)
 	conn.SetReadDeadline(time.Now().Add(2 * time.Second))
@@ -31,17 +29,24 @@ func (network *Network) SendPingMessage(contact *Contact) bool {
 	if err != nil {
 		return false
 	}
-	handlePingResponse(buffer[:n], network)
+	network.handlePingResponse(buffer[:n])
 	return true
 }
 
-func getPingMessage(network *Network) []byte {
+/*
+Returns a standard ping message
+*/
+func (network *Network) getPingMessage() []byte {
 	startMessage := []byte(newPing().startMessage + ";")
 	body := network.marshalCurrentNode()
 	return append(startMessage, body...)
 }
 
-func handlePingResponse(message []byte, network *Network) {
+/*
+Handle the ping response and parse to see if an error has occurred or if the response was successful
+  - message []byte, the response to parse
+*/
+func (network *Network) handlePingResponse(message []byte) {
 	if string(message[:5]) == "Error" {
 		log.Println(string(message))
 		return
@@ -54,6 +59,11 @@ func handlePingResponse(message []byte, network *Network) {
 	}
 }
 
+/*
+Sending a send find contact RPC message to a contact and returns the responded list of contacts
+  - contact *Contact, the contact to send the RPC to
+  - nodeID *KademliaID, the id to find closest contact
+*/
 func (network *Network) SendFindContactMessage(contact *Contact, nodeID *KademliaID) []Contact {
 	conn, err3 := net.Dial("udp4", contact.Address)
 	if err3 != nil {
@@ -61,7 +71,7 @@ func (network *Network) SendFindContactMessage(contact *Contact, nodeID *Kademli
 		return nil
 	}
 	defer conn.Close()
-	message := getFindContactMessage(network, nodeID)
+	message := network.getFindContactMessage(nodeID)
 	conn.Write(message)
 	buffer := make([]byte, maxBytes)
 	conn.SetReadDeadline(time.Now().Add(2 * time.Second))
@@ -69,10 +79,14 @@ func (network *Network) SendFindContactMessage(contact *Contact, nodeID *Kademli
 	if err != nil {
 		return nil
 	}
-	return handleFindContactResponse(buffer[:n], network)
+	return network.handleFindContactResponse(buffer[:n])
 }
 
-func getFindContactMessage(network *Network, nodeID *KademliaID) []byte {
+/*
+Returns a standard find contact message to find contacts close to nodeID
+  - nodeID *KademliaID, the id to find closest contacts to
+*/
+func (network *Network) getFindContactMessage(nodeID *KademliaID) []byte {
 	body, _ := json.Marshal(nodeID)
 	startMessage := []byte(newFindContact().startMessage + ";" + string(body) + ";")
 	body2 := network.marshalCurrentNode()
@@ -80,7 +94,13 @@ func getFindContactMessage(network *Network, nodeID *KademliaID) []byte {
 
 }
 
-func handleFindContactResponse(message []byte, network *Network) []Contact {
+/*
+Handle the find contact response and parse to see if an error has occurred or if the response was successful
+  - message []byte, the response to parse
+
+Returns the list of contacts
+*/
+func (network *Network) handleFindContactResponse(message []byte) []Contact {
 	if string(message[:5]) == "Error" {
 		log.Println(string(message))
 		return nil
@@ -99,6 +119,11 @@ func handleFindContactResponse(message []byte, network *Network) []Contact {
 	}
 }
 
+/*
+Sending a send find data RPC message to a contact and returns the data if found otherwise "ERROR"
+  - hash *KademliaID, the hash to find data for
+  - contact *Contact, the contact to send the RPC to
+*/
 func (network *Network) SendFindDataMessage(hash *KademliaID, contact *Contact) string {
 	conn, err3 := net.Dial("udp4", contact.Address)
 	if err3 != nil {
@@ -106,7 +131,7 @@ func (network *Network) SendFindDataMessage(hash *KademliaID, contact *Contact) 
 		return "ERROR"
 	}
 	defer conn.Close()
-	message := getFindDataMessage(network, hash)
+	message := network.getFindDataMessage(hash)
 	conn.Write(message)
 	buffer := make([]byte, maxBytes)
 	conn.SetReadDeadline(time.Now().Add(2 * time.Second))
@@ -114,12 +139,14 @@ func (network *Network) SendFindDataMessage(hash *KademliaID, contact *Contact) 
 	if err != nil {
 		return "ERROR"
 	}
-	return handleSendDataResponse(buffer[:n], network)
-
-	// TODO
+	return network.handleSendFindDataResponse(buffer[:n])
 }
 
-func getFindDataMessage(network *Network, hash *KademliaID) []byte {
+/*
+Returns a standard find data message to find data with hash
+  - hash *KademliaID, the hash to find data for
+*/
+func (network *Network) getFindDataMessage(hash *KademliaID) []byte {
 	body, _ := json.Marshal(hash)
 	startMessage := []byte(newFindData().startMessage + ";" + string(body) + ";")
 	body2 := network.marshalCurrentNode()
@@ -127,7 +154,11 @@ func getFindDataMessage(network *Network, hash *KademliaID) []byte {
 
 }
 
-func handleSendDataResponse(message []byte, network *Network) string {
+/*
+Handle the send find data response and parse to see if an error has occurred or if the response was successful
+  - message []byte, the response to parse
+*/
+func (network *Network) handleSendFindDataResponse(message []byte) string {
 	if string(message[:5]) == "Error" {
 		log.Println(string(message))
 		return string(message)
@@ -152,6 +183,12 @@ func handleSendDataResponse(message []byte, network *Network) string {
 	}
 }
 
+/*
+Sending a send store RPC message to a contact and returns if the RPC was successful
+  - data []byte, the data to store
+  - contact *Contact, the contact to send the RPC to
+  - kademlia *Kademlia, the kademlia algorithm to send the rpc to
+*/
 func (network *Network) SendStoreMessage(data []byte, ttl time.Duration, contact *Contact, kademlia *Kademlia) bool {
 	conn, err3 := net.Dial("udp4", contact.Address)
 	if err3 != nil {
@@ -159,7 +196,7 @@ func (network *Network) SendStoreMessage(data []byte, ttl time.Duration, contact
 		return false
 	}
 	defer conn.Close()
-	message := getStoreMessage(network, data, ttl)
+	message := network.getStoreMessage(data, ttl)
 	conn.Write(message)
 	buffer := make([]byte, maxBytes)
 	hash := NewKademliaID(string(data))
@@ -169,11 +206,16 @@ func (network *Network) SendStoreMessage(data []byte, ttl time.Duration, contact
 	if err != nil {
 		return false
 	}
-	handleStoreResponse(buffer[:n], network)
+	network.handleStoreResponse(buffer[:n])
 	return true
 }
 
-func getStoreMessage(network *Network, data []byte, ttl time.Duration) []byte {
+/*
+Returns a standard store message to send the data to store
+  - data []byte, the data to send with the store RPC
+  - ttl time.Duration, the time to live for the data
+*/
+func (network *Network) getStoreMessage(data []byte, ttl time.Duration) []byte {
 	body, _ := json.Marshal(data)
 	body2, _ := json.Marshal(ttl)
 	startMessage := []byte(newStoreMessage().startMessage + ";" + string(body) + ";" + string(body2) + ";")
@@ -181,7 +223,11 @@ func getStoreMessage(network *Network, data []byte, ttl time.Duration) []byte {
 	return append(startMessage, body3...)
 }
 
-func handleStoreResponse(message []byte, network *Network) {
+/*
+Handle the store data response and parse to see if an error has occurred or if the response was successful
+  - message []byte, the response to parse
+*/
+func (network *Network) handleStoreResponse(message []byte) {
 	if string(message[:5]) == "Error" {
 		log.Println(string(message))
 		return
@@ -194,6 +240,11 @@ func handleStoreResponse(message []byte, network *Network) {
 	}
 }
 
+/*
+Sending a refresh RPC message to a contact and returns if the RPC was successful
+  - hash *KademliaID, the hash of the data to refresh
+  - contact *Contact, the contact to send the RPC to
+*/
 func (network *Network) SendRefreshMessage(hash *KademliaID, contact *Contact) bool {
 	conn, err3 := net.Dial("udp4", contact.Address)
 	if err3 != nil {
@@ -201,7 +252,7 @@ func (network *Network) SendRefreshMessage(hash *KademliaID, contact *Contact) b
 		return false
 	}
 	defer conn.Close()
-	message := getRefreshMessage(network, hash)
+	message := network.getRefreshMessage(hash)
 	conn.Write(message)
 	buffer := make([]byte, maxBytes)
 	conn.SetReadDeadline(time.Now().Add(2 * time.Second))
@@ -209,11 +260,15 @@ func (network *Network) SendRefreshMessage(hash *KademliaID, contact *Contact) b
 	if err != nil {
 		return false
 	}
-	handleRefreshResponse(buffer[:n], network)
+	network.handleRefreshResponse(buffer[:n])
 	return true
 }
 
-func getRefreshMessage(network *Network, hash *KademliaID) []byte {
+/*
+Returns a refresh message to send to the contact
+  - hash *KademliaId, the hash of the value to refresh
+*/
+func (network *Network) getRefreshMessage(hash *KademliaID) []byte {
 	body, _ := json.Marshal(hash)
 	startMessage := []byte(newRefreshMessage().startMessage + ";" + string(body) + ";")
 	body2 := network.marshalCurrentNode()
@@ -221,6 +276,27 @@ func getRefreshMessage(network *Network, hash *KademliaID) []byte {
 
 }
 
+/*
+Handle the refresh response and parse to see if an error has occurred or if the response was successful
+  - message []byte, the response to parse
+*/
+func (network *Network) handleRefreshResponse(message []byte) {
+	if string(message[:5]) == "Error" {
+		log.Println(string(message))
+		return
+	} else {
+		var contact *Contact
+		json.Unmarshal(message, &contact)
+		if VerifyContact(contact, network) {
+			network.RoutingTable.AddContact(*contact)
+		}
+	}
+}
+
+/*
+A loop that will send a refresh message to every known holder every second
+  - kademlia *Kademlia, the current nodes kademlia to get the known holders
+*/
 func (network *Network) RefreshLoop(kademlia *Kademlia) {
 	for {
 		for contact, hash := range kademlia.KnownHolders {
@@ -230,19 +306,10 @@ func (network *Network) RefreshLoop(kademlia *Kademlia) {
 	}
 }
 
-func handleRefreshResponse(message []byte, network *Network) {
-	if string(message[:5]) == "Error" {
-		log.Println(string(message))
-		return
-	} else {
-		var contact *Contact
-		json.Unmarshal(message, &contact)
-		if VerifyContact(contact, network) {
-			network.RoutingTable.AddContact(*contact)
-		}
-	}
-}
-
+/*
+Returns the byte array representation of our current nodes contact
+information to be sent with every RPC call
+*/
 func (network *Network) marshalCurrentNode() []byte {
 	body, _ := json.Marshal(network.CurrentNode)
 	return body

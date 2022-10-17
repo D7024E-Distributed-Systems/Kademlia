@@ -276,7 +276,7 @@ func TestRefreshResponseFailure(t *testing.T) {
 	contact := NewContact(nodeID, "127.0.0.1:3000")
 	network := NewNetwork(&contact)
 
-	handleRefreshResponse([]byte("Error"), network)
+	network.handleRefreshResponse([]byte("Error"))
 }
 
 func TestHandleStoreResponseFailure(t *testing.T) {
@@ -284,7 +284,7 @@ func TestHandleStoreResponseFailure(t *testing.T) {
 	contact := NewContact(nodeID, "127.0.0.1:3000")
 	network := NewNetwork(&contact)
 
-	handleStoreResponse([]byte("Error"), network)
+	network.handleStoreResponse([]byte("Error"))
 }
 
 func TestMarshalCurrentNodeFailure(t *testing.T) {

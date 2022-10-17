@@ -12,7 +12,11 @@ type RoutingTable struct {
 	bucketMutex sync.Mutex
 }
 
-// NewRoutingTable returns a new instance of a RoutingTable
+/*
+Returns a new instance of a RoutingTable
+
+  - me Contact, sets the current contact to ourself
+*/
 func NewRoutingTable(me Contact) *RoutingTable {
 	routingTable := &RoutingTable{}
 	for i := 0; i < IDLength*8; i++ {
@@ -23,7 +27,10 @@ func NewRoutingTable(me Contact) *RoutingTable {
 	return routingTable
 }
 
-// AddContact add a new contact to the correct Bucket
+/*
+Adds a new contact to the correct Bucket from our routing table
+  - contact Contact, add this contact to the bucket if the bucket is not full
+*/
 func (routingTable *RoutingTable) AddContact(contact Contact) {
 	routingTable.bucketMutex.Lock()
 	defer routingTable.bucketMutex.Unlock()
@@ -32,7 +39,11 @@ func (routingTable *RoutingTable) AddContact(contact Contact) {
 	bucket.AddContact(contact, routingTable.me, &routingTable.bucketMutex)
 }
 
-// FindClosestContacts finds the count closest Contacts to the target in the RoutingTable
+/*
+Finds the "count" closest Contact to the target from the routing table
+  - target *KademliaID, the id to calculate the closest distance to
+  - count int, the number of contacts to return
+*/
 func (routingTable *RoutingTable) FindClosestContacts(target *KademliaID, count int) []Contact {
 	var candidates ContactCandidates
 	routingTable.bucketMutex.Lock()
@@ -62,7 +73,10 @@ func (routingTable *RoutingTable) FindClosestContacts(target *KademliaID, count 
 	return candidates.GetContacts(count)
 }
 
-// getBucketIndex get the correct Bucket index for the KademliaID
+/*
+Get the correct Bucket index for the KademliaID
+  - id *KademliaID, the id of a node to find the bucket index for
+*/
 func (routingTable *RoutingTable) getBucketIndex(id *KademliaID) int {
 	distance := id.CalcDistance(routingTable.me.ID)
 	for i := 0; i < IDLength; i++ {
